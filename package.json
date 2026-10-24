@@ -1,0 +1,16 @@
+{
+  "name": "traviatita",
+  "version": "1.0.0",
+  "description": "Bot base de Discord con comando /talk",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.9"
+  }
+}
