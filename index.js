@@ -30,8 +30,18 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'talk') {
     const mensaje = interaction.options.getString('mensaje');
-    await interaction.deferReply();
-    await interaction.editReply(mensaje);
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      await interaction.channel.send(mensaje);
+      await interaction.deleteReply();
+      console.log(
+        `[${new Date().toISOString()}] Confesión de ${interaction.user.tag} en #${interaction.channel.name}`,
+      );
+    } catch (error) {
+      console.error(error);
+      await interaction.editReply('No pude enviar tu confesión (revisa mis permisos en el canal).');
+    }
   }
 });
 
