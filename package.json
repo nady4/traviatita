@@ -1,11 +1,10 @@
 {
   "name": "traviatita",
   "version": "1.0.0",
-  "description": "Bot base de Discord con comando /talk",
+  "description": "Bot base de Discord",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "zip": "zip -r traviatita.zip . -x 'node_modules/*' '.git/*' 'traviatita.zip'"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
