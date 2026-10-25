@@ -196,7 +196,7 @@ function buildEmbed() {
   const anyInStock = PRODUCTS.some((p) => state.products[p.slug]?.inStock);
   const embed = new EmbedBuilder()
     .setColor(anyInStock ? 0x2ecc71 : 0xe74c3c)
-    .setTitle('Stock de estradiol — Otokonoko Pharmacy')
+    .setTitle('🏳️‍⚧️ Stock de estradiol — Otokonoko Pharmacy 💊')
     .setURL(BASE);
 
   for (const p of PRODUCTS) {
