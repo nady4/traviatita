@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const otokonoko = require('./otokonoko');
 
 const commands = [
   new SlashCommandBuilder()
@@ -11,6 +12,9 @@ const commands = [
         .setDescription('Lo que quieres que el bot diga')
         .setRequired(true),
     ),
+  new SlashCommandBuilder()
+    .setName('otokonoko')
+    .setDescription('Stock de estradiol en Otokonoko Pharmacy'),
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -23,6 +27,8 @@ client.once('ready', async () => {
   const rest = new REST().setToken(process.env.TOKEN);
   await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
   console.log('Comandos registrados');
+
+  otokonoko.start(client);
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -42,6 +48,12 @@ client.on('interactionCreate', async (interaction) => {
       console.error(error);
       await interaction.editReply('No pude enviar tu confesión (revisa mis permisos en el canal).');
     }
+  }
+
+  if (interaction.commandName === 'otokonoko') {
+    await interaction.deferReply();
+    await otokonoko.ensureData(client);
+    await interaction.editReply({ embeds: [otokonoko.buildEmbed()] });
   }
 });
 
