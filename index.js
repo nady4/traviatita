@@ -21,7 +21,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`Conectado como ${client.user.tag}`);
 
   const rest = new REST().setToken(process.env.TOKEN);
