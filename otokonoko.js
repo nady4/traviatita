@@ -11,7 +11,7 @@ const STATE_FILE = path.join(__dirname, 'stock.json');
 const PRODUCTS = [
   { slug: 'estradiol-valerate', label: 'Valerato de estradiol' },
   { slug: 'estradiol-cypionate', label: 'Cipionato de estradiol' },
-  { slug: 'estradiol-enanthate', label: 'Enantato de estradiol' },
+  { slug: 'estradiol-enanthate', label: 'Enanato de estradiol' },
 ];
 
 let state = { jar: {}, lastCheck: null, lastChange: null, products: {} };
@@ -115,22 +115,6 @@ async function anubisFetch(url) {
   throw new Error('anubis: sigue mostrando challenge tras re-autenticar');
 }
 
-function fmtAmount(minor, unit, decSep) {
-  const s = (Number(minor) / 10 ** unit).toFixed(unit);
-  return decSep ? s.replace('.', decSep) : s;
-}
-
-function formatPrice(prices) {
-  if (!prices) return null;
-  const unit = prices.currency_minor_unit ?? 2;
-  const sep = prices.currency_decimal_separator ?? '.';
-  const prefix = prices.currency_prefix ?? '$';
-  if (prices.price_range?.min_amount) {
-    return `${prefix}${fmtAmount(prices.price_range.min_amount, unit, sep)} – ${prefix}${fmtAmount(prices.price_range.max_amount, unit, sep)}`;
-  }
-  return `${prefix}${fmtAmount(prices.price, unit, sep)}`;
-}
-
 async function announceChange(client, slug, label, wasInStock, current) {
   const channelId = process.env.OTK_ANNOUNCE_CHANNEL_ID;
   if (!channelId || !client) return;
@@ -142,7 +126,7 @@ async function announceChange(client, slug, label, wasInStock, current) {
       .setTitle('Otokonoko Pharmacy')
       .setURL(`${BASE}/product/${slug}/`)
       .setDescription(
-        `**${label}**: ${wasInStock ? '🟢 en stock' : '🔴 agotado'} → ${current.inStock ? '🟢 **en stock**' : '🔴 **agotado**'}${current.price ? ` (${current.price})` : ''}`,
+        `**${label}**: ${wasInStock ? '🟢 en stock' : '🔴 agotado'} → ${current.inStock ? '🟢 **en stock**' : '🔴 **agotado**'}`,
       );
     await channel.send({ embeds: [embed] });
   } catch (err) {
@@ -162,14 +146,13 @@ async function checkAll(client) {
 
       const now = new Date().toISOString();
       const inStock = prod.is_in_stock === true;
-      const price = formatPrice(prod.prices);
       const prev = state.products[p.slug];
       const changed = !!prev && prev.inStock !== inStock;
 
       state.products[p.slug] = {
         name: prod.name,
         inStock,
-        price,
+        lastInStock: inStock ? now : prev?.lastInStock ?? null,
         lastChange: changed ? now : prev?.lastChange ?? null,
       };
       if (changed) {
@@ -218,10 +201,11 @@ function buildEmbed() {
 
   for (const p of PRODUCTS) {
     const s = state.products[p.slug];
+    const lastSeen = !s?.inStock && s?.lastInStock ? ` · Última vez en stock: ${discordTs(s.lastInStock)}` : '';
     embed.addFields({
       name: s ? `${s.inStock ? '🟢' : '🔴'} ${p.label}` : `⏳ ${p.label}`,
       value: s
-        ? `${s.inStock ? 'En stock' : 'Agotado'}${s.price ? ` · ${s.price}` : ''}\n[Ver producto](${BASE}/product/${p.slug}/)`
+        ? `${s.inStock ? 'En stock' : 'Agotado'}${lastSeen}\n[Ver producto](${BASE}/product/${p.slug}/)`
         : 'Sin datos de stock aún',
     });
   }
