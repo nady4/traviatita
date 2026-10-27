@@ -3,6 +3,7 @@ const path = require('path');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const STATE_FILE = path.join(__dirname, 'hormonas.json');
+const TAG = '⏰ [hormonas]';
 
 const INTERVALS = {
   '12h': { ms: 12 * 60 * 60_000, label: 'cada 12 horas' },
@@ -115,8 +116,9 @@ async function tick(client) {
       const user = await client.users.fetch(id);
       await user.send({ embeds: [reminderEmbed(label)] });
       sent = true;
+      console.log(`${TAG} 💌 DM enviado a ${id} (${r.interval})`);
     } catch (err) {
-      console.error('[hormonas] DM a', id, ':', err.message);
+      console.error(`${TAG} ⚠️ DM a ${id}: ${err.message}`);
     }
 
     if (sent) {
@@ -129,7 +131,7 @@ async function tick(client) {
         while (next <= now) next += iv;
         r.next = new Date(next).toISOString();
         r.fails = 0;
-        console.error('[hormonas] 5 fallos de DM seguidos, salto hasta el próximo vencimiento para', id);
+        console.error(`${TAG} ⚠️ ${id}: 5 fallos de DM seguidos, salto al próximo vencimiento`);
       } else {
         r.next = new Date(now + 15 * 60_000).toISOString();
       }
@@ -140,10 +142,11 @@ async function tick(client) {
 }
 
 function start(client) {
-  const run = () => tick(client).catch((err) => console.error('[hormonas] tick:', err.message));
+  const run = () => tick(client).catch((err) => console.error(`${TAG} ⚠️ tick:`, err.message));
   setTimeout(run, 5_000);
   setInterval(run, 60_000);
-  console.log(`[hormonas] ${Object.keys(state.users).length} recordatorio(s) activo(s), tick cada 60 s`);
+  const n = Object.keys(state.users).length;
+  console.log(`${TAG} ✅ tick cada 60 s · ${n === 0 ? 'sin recordatorios' : `${n} recordatorio${n === 1 ? '' : 's'}`}`);
 }
 
 loadState();

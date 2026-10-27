@@ -46,13 +46,7 @@ const commands = [
     .setDescription('Recordatorio para tomarte tus hormonas'),
   new SlashCommandBuilder()
     .setName('dias')
-    .setDescription('Cuánto llevás en HRT')
-    .addStringOption((option) =>
-      option
-        .setName('fecha')
-        .setDescription('Fecha de inicio (DD/MM/AAAA o AAAA-MM-DD)')
-        .setRequired(false),
-    ),
+    .setDescription('Cuánto llevás en HRT'),
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -60,11 +54,11 @@ const client = new Client({
 });
 
 client.once('clientReady', async () => {
-  console.log(`Conectado como ${client.user.tag}`);
+  console.log(`☑️ Conectado como ${client.user.tag}`);
 
   const rest = new REST().setToken(process.env.TOKEN);
   await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-  console.log('Comandos registrados');
+  console.log(`⚡ ${commands.length} comandos registrados`);
 
   otokonoko.start(client);
   astrovials.start(client);
@@ -89,7 +83,7 @@ client.on('interactionCreate', async (interaction) => {
 
       dias.set(interaction.user.id, date);
       console.log(
-        `[${new Date().toISOString()}] inicio HRT de ${interaction.user.tag}: ${date.toISOString().slice(0, 10)}`,
+        `⏳ [${new Date().toISOString()}] ${interaction.user.tag}: inicio HRT ${date.toISOString().slice(0, 10)}`,
       );
       const view = dias.buildView(interaction.user.id);
       try {
@@ -99,7 +93,7 @@ client.on('interactionCreate', async (interaction) => {
           await interaction.reply({ ephemeral: true, ...view });
         }
       } catch (err) {
-        console.error('[dias] modal submit:', err.message);
+        console.error('⏳ [dias] ⚠️ modal submit:', err.message);
       }
     }
     return;
@@ -113,7 +107,7 @@ client.on('interactionCreate', async (interaction) => {
           const r = hormonas.set(interaction.user.id, key);
           const label = hormonas.INTERVALS[key].label;
           console.log(
-            `[${new Date().toISOString()}] recordatorio hormonas de ${interaction.user.tag}: ${label}, próx. ${r.next}`,
+            `⏰ [${new Date().toISOString()}] ${interaction.user.tag}: recordatorio ${label} · próxima ${r.next}`,
           );
         } else if (action === 'cancel') {
           hormonas.cancel(interaction.user.id);
@@ -122,7 +116,7 @@ client.on('interactionCreate', async (interaction) => {
         }
         await interaction.update(hormonas.view(interaction.user.id));
       } catch (err) {
-        console.error('[hormonas] botón:', err.message);
+        console.error('⏰ [hormonas] ⚠️ botón:', err.message);
         await interaction
           .reply({ content: 'Error gestionando el recordatorio.', ephemeral: true })
           .catch(() => {});
@@ -133,7 +127,7 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.customId.startsWith('dias:edit')) {
       const current = dias.get(interaction.user.id)?.date ?? '';
       await interaction.showModal(dias.buildModal(current)).catch((err) => {
-        console.error('[dias] modal:', err.message);
+        console.error('⏳ [dias] ⚠️ modal:', err.message);
       });
       return;
     }
@@ -177,7 +171,7 @@ client.on('interactionCreate', async (interaction) => {
         }
       }
     } catch (err) {
-      console.error(`[${new Date().toISOString()}] botón notify (${interaction.customId}):`, err.message);
+      console.error(`⚠️ [suscripción] ${interaction.customId}:`, err.message);
       await interaction
         .reply({
           content: 'No pude gestionar tu suscripción (revisa mis permisos de "gestionar roles" y la jerarquía del rol).',
@@ -190,10 +184,6 @@ client.on('interactionCreate', async (interaction) => {
 
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.isModalSubmit()) {
-    return;
-  }
-
   if (interaction.commandName === 'talk') {
     const mensaje = interaction.options.getString('mensaje');
     await interaction.deferReply({ ephemeral: true });
@@ -202,10 +192,10 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.channel.send(mensaje);
       await interaction.deleteReply();
       console.log(
-        `[${new Date().toISOString()}] Confesión de ${interaction.user.tag} en #${interaction.channel.name}`,
+        `💌 [${new Date().toISOString()}] Confesión de ${interaction.user.tag} en #${interaction.channel.name}`,
       );
     } catch (error) {
-      console.error(error);
+      console.error('💌 [talk] ⚠️ no pude enviar la confesión:', error.message);
       await interaction.editReply('No pude enviar tu confesión (revisa mis permisos en el canal).');
     }
   }
@@ -227,22 +217,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   if (interaction.commandName === 'dias') {
-    const raw = interaction.options.getString('fecha');
-    if (raw) {
-      const date = dias.parse(raw);
-      if (!date) {
-        await interaction.reply({
-          content: `Fecha inválida \`${raw}\` — usa DD/MM/AAAA o AAAA-MM-DD, sin fechas futuras.`,
-          ephemeral: true,
-        });
-        return;
-      }
-      dias.set(interaction.user.id, date);
-      console.log(
-        `[${new Date().toISOString()}] inicio HRT de ${interaction.user.tag}: ${date.toISOString().slice(0, 10)}`,
-      );
-    }
-    await interaction.reply({ ephemeral: true, ...dias.buildView(interaction.user.id) });
+    await interaction.reply({ ...dias.buildView(interaction.user.id) });
   }
 });
 

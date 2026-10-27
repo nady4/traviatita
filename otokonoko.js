@@ -8,6 +8,7 @@ const BASE = 'https://otkph.am';
 const STORE_API = `${BASE}/wp-json/wc/store/v1/products`;
 const STATE_FILE = path.join(__dirname, 'stock.json');
 const NOTIFY_ROLE_ID = process.env.OTK_NOTIFY_ROLE_ID ?? '1564743557733027871';
+const TAG = '💊 [otokonoko]';
 
 const PRODUCTS = [
   { slug: 'estradiol-valerate', label: 'Valerato de estradiol' },
@@ -101,7 +102,7 @@ async function authenticate(challengeHtml, challengeUrl) {
   await res.text().catch(() => '');
   if (res.status !== 302) throw new Error(`anubis: pass-challenge respondió ${res.status}`);
   saveState();
-  console.log('[otokonoko] anubis autenticado');
+  console.log(`${TAG} 🔐 anubis autenticado`);
 }
 
 async function anubisFetch(url) {
@@ -135,12 +136,14 @@ async function announceChange(client, slug, label, wasInStock, current) {
       allowedMentions: { roles: [NOTIFY_ROLE_ID] },
     });
   } catch (err) {
-    console.error('[otokonoko] anuncio:', err.message);
+    console.error(`${TAG} ⚠️ no pude anunciar:`, err.message);
   }
 }
 
 async function checkAll(client) {
+  const badges = [];
   let ok = 0;
+  let fails = 0;
   for (const p of PRODUCTS) {
     try {
       const { res, body } = await anubisFetch(`${STORE_API}?slug=${p.slug}`);
@@ -160,16 +163,19 @@ async function checkAll(client) {
         lastInStock: inStock ? now : prev?.lastInStock ?? null,
         lastChange: changed ? now : prev?.lastChange ?? null,
       };
+      badges.push(inStock ? '🟢' : '🔴');
       if (changed) {
         state.lastChange = now;
-        console.log(`[otokonoko] CAMBIO ${p.label}: ${prev.inStock ? 'en stock → agotado' : 'agotado → EN STOCK'}`);
+        console.log(`${TAG} 🔔 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'}`);
         await announceChange(client, p.slug, p.label, prev.inStock, state.products[p.slug]);
-      } else {
-        console.log(`[otokonoko] ${p.label}: ${inStock ? 'EN STOCK' : 'agotado'}`);
+      } else if (!prev) {
+        console.log(`${TAG} ➕ ${p.label}: ${inStock ? '🟢' : '🔴'} (primera lectura)`);
       }
       ok++;
     } catch (err) {
-      console.error(`[otokonoko] error con ${p.slug}:`, err.message);
+      fails++;
+      badges.push('⚠️');
+      console.error(`${TAG} ⚠️ ${p.slug}: ${err.message}`);
     }
     await new Promise((r) => setTimeout(r, 2000));
   }
@@ -177,6 +183,7 @@ async function checkAll(client) {
     state.lastCheck = new Date().toISOString();
     saveState();
   }
+  console.log(`${TAG} 📋 ${badges.join('')} (${ok}/${PRODUCTS.length}${fails ? `, ${fails} fallas` : ''})`);
 }
 
 function hasData() {
@@ -225,10 +232,10 @@ function buildEmbed() {
 
 function start(client) {
   const minutes = Math.max(1, Number.parseInt(process.env.OTK_CHECK_MINUTES ?? '10', 10) || 10);
-  const run = () => checkAll(client).catch((err) => console.error('[otokonoko]', err.message));
+  const run = () => checkAll(client).catch((err) => console.error(`${TAG} ⚠️`, err.message));
   setTimeout(run, 30_000);
   setInterval(run, minutes * 60_000);
-  console.log(`[otokonoko] rastreando ${PRODUCTS.length} productos, chequeo cada ${minutes} min`);
+  console.log(`${TAG} ✅ rastreo: ${PRODUCTS.length} productos cada ${minutes} min (${BASE.replace('https://', '')})`);
 }
 
 loadState();

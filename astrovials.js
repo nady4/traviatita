@@ -6,6 +6,7 @@ const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132
 const BASE = 'https://astrovials.com';
 const STATE_FILE = path.join(__dirname, 'astro.json');
 const NOTIFY_ROLE_ID = process.env.ASTRO_NOTIFY_ROLE_ID ?? '1564743677601915051';
+const TAG = '🚀 [astrovials]';
 
 const PRODUCTS = [
   { slug: 'estradiol-valerate-mct', label: 'Valerato de estradiol (MCT)' },
@@ -71,12 +72,14 @@ async function announceChange(client, slug, label, wasInStock, current) {
       allowedMentions: { roles: [NOTIFY_ROLE_ID] },
     });
   } catch (err) {
-    console.error('[astrovials] anuncio:', err.message);
+    console.error(`${TAG} ⚠️ no pude anunciar:`, err.message);
   }
 }
 
 async function checkAll(client) {
+  const badges = [];
   let ok = 0;
+  let fails = 0;
   for (const p of PRODUCTS) {
     try {
       const prod = await fetchProductPage(p.slug);
@@ -93,16 +96,19 @@ async function checkAll(client) {
         lastInStock: inStock ? now : prev?.lastInStock ?? null,
         lastChange: changed ? now : prev?.lastChange ?? null,
       };
+      badges.push(inStock ? '🟢' : '🔴');
       if (changed) {
+        console.log(`${TAG} 🔔 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} (${priceStr(prod)} · ${prod.stock} u.)`);
         state.lastChange = now;
-        console.log(`[astrovials] CAMBIO ${p.label}: ${prev.inStock ? 'en stock → agotado' : 'agotado → EN STOCK'}`);
         await announceChange(client, p.slug, p.label, prev.inStock, state.products[p.slug]);
-      } else {
-        console.log(`[astrovials] ${p.label}: ${inStock ? `EN STOCK (${prod.stock})` : 'agotado'} · ${priceStr(prod)}`);
+      } else if (!prev) {
+        console.log(`${TAG} ➕ ${p.label}: ${inStock ? '🟢' : '🔴'} (primera lectura) · ${priceStr(prod)}`);
       }
       ok++;
     } catch (err) {
-      console.error(`[astrovials] error con ${p.slug}:`, err.message);
+      fails++;
+      badges.push('⚠️');
+      console.error(`${TAG} ⚠️ ${p.slug}: ${err.message}`);
     }
     await new Promise((r) => setTimeout(r, 2000));
   }
@@ -110,6 +116,7 @@ async function checkAll(client) {
     state.lastCheck = new Date().toISOString();
     saveState();
   }
+  console.log(`${TAG} 📋 ${badges.join('')} (${ok}/${PRODUCTS.length}${fails ? `, ${fails} fallas` : ''})`);
 }
 
 function hasData() {
@@ -158,10 +165,10 @@ function buildEmbed() {
 
 function start(client) {
   const minutes = Math.max(1, Number.parseInt(process.env.ASTRO_CHECK_MINUTES ?? '10', 10) || 10);
-  const run = () => checkAll(client).catch((err) => console.error('[astrovials]', err.message));
+  const run = () => checkAll(client).catch((err) => console.error(`${TAG} ⚠️`, err.message));
   setTimeout(run, 45_000);
   setInterval(run, minutes * 60_000);
-  console.log(`[astrovials] rastreando ${PRODUCTS.length} productos, chequeo cada ${minutes} min`);
+  console.log(`${TAG} ✅ rastreo: ${PRODUCTS.length} productos cada ${minutes} min (${BASE.replace('https://', '')})`);
 }
 
 loadState();

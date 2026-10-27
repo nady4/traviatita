@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
 const STATE_FILE = path.join(__dirname, 'dias.json');
 
@@ -82,26 +82,26 @@ function fmtDuration({ y, mo, d }) {
   return `${first}${parts.length ? '' : ''}${parts.length ? ', ' + parts.join(', ') + ' y ' : ' y '}${last}`;
 }
 
-function discordTs(date) {
-  return `<t:${Math.floor(date.getTime() / 1000)}:D>`;
+// mediodía UTC: <t:D> muestra el mismo día calendario en cualquier huso hasta ±11 h
+function stableTs(date) {
+  const noon = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
+  return `<t:${Math.floor(noon / 1000)}:D>`;
 }
 
 function buildView(userId) {
   const r = get(userId);
-  const embed = new EmbedBuilder().setColor(0x7cc6dd).setTitle('⏳ Días en HRT 💊');
-
-  if (r) {
-    const start = new Date(`${r.date}T00:00:00.000Z`);
-    const b = breakdown(start);
-    embed.addFields(
-      { name: '⏳ Llevas', value: `**${fmtDuration(b)}**\n(${b.totalDays} ${b.totalDays === 1 ? 'día' : 'días'} en total)` },
-      { name: '📅 Inicio', value: `${r.date} (${discordTs(start)})` },
-    );
-  } else {
-    embed.addFields({ name: '⏳ Llevas', value: 'Sin fecha de inicio — usa el botón o ponla con `/dias fecha:DD/MM/AAAA`' });
+  if (!r) {
+    return {
+      content: 'Todavía no cargaste tu fecha de inicio en HRT — ponla con el botón',
+      components: [viewRow()],
+    };
   }
-
-  return { embeds: [embed], components: [viewRow()] };
+  const start = new Date(`${r.date}T00:00:00.000Z`);
+  const b = breakdown(start);
+  return {
+    content: `Llevás **${fmtDuration(b)}** con tus hormonas (${b.totalDays} ${b.totalDays === 1 ? 'día' : 'días'}), desde el ${stableTs(start)}`,
+    components: [viewRow()],
+  };
 }
 
 function viewRow() {
