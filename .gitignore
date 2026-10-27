@@ -1,3 +1,5 @@
 node_modules/
 .env
 stock.json
+astro.json
+hormonas.json

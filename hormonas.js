@@ -1,0 +1,151 @@
+const fs = require('fs');
+const path = require('path');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+const STATE_FILE = path.join(__dirname, 'hormonas.json');
+
+const INTERVALS = {
+  '12h': { ms: 12 * 60 * 60_000, label: 'cada 12 horas' },
+  '1d': { ms: 24 * 60 * 60_000, label: 'cada 1 día' },
+  '36h': { ms: 36 * 60 * 60_000, label: 'cada 1,5 días' },
+  '5d': { ms: 5 * 24 * 60 * 60_000, label: 'cada 5 días' },
+  '1w': { ms: 7 * 24 * 60 * 60_000, label: 'cada 1 semana' },
+  '2w': { ms: 14 * 24 * 60 * 60_000, label: 'cada 2 semanas' },
+  '1mo': { ms: 30 * 24 * 60 * 60_000, label: 'cada 1 mes' },
+};
+
+let state = { users: {} };
+
+function loadState() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    state = { users: raw.users ?? {} };
+  } catch {
+    state = { users: {} };
+  }
+}
+
+function saveState() {
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+function get(userId) {
+  return state.users[userId] ?? null;
+}
+
+function set(userId, key) {
+  const iv = INTERVALS[key];
+  state.users[userId] = {
+    interval: key,
+    next: new Date(Date.now() + iv.ms).toISOString(),
+    fails: 0,
+  };
+  saveState();
+  return state.users[userId];
+}
+
+function cancel(userId) {
+  const had = !!state.users[userId];
+  delete state.users[userId];
+  if (had) saveState();
+  return had;
+}
+
+function discordTs(iso) {
+  return `<t:${Math.floor(new Date(iso).getTime() / 1000)}:R>`;
+}
+
+function intervalRows(current, userId) {
+  const mk = (key) =>
+    new ButtonBuilder()
+      .setCustomId(`hormonas:set:${key}`)
+      .setLabel(key)
+      .setStyle(key === current ? ButtonStyle.Success : ButtonStyle.Secondary);
+  const inputs = Object.keys(INTERVALS);
+  const row1 = new ActionRowBuilder().addComponents(...inputs.slice(0, 5).map(mk));
+  const row2 = new ActionRowBuilder().addComponents(
+    ...inputs.slice(5).map(mk),
+    new ButtonBuilder()
+      .setCustomId('hormonas:cancel')
+      .setLabel('Cancelar')
+      .setEmoji('🚫')
+      .setStyle(ButtonStyle.Danger),
+  );
+  return [row1, row2];
+}
+
+function view(userId) {
+  const r = get(userId);
+  const embed = new EmbedBuilder().setColor(0xe77cae).setTitle('💊 Recordatorio de hormonas');
+
+  if (r) {
+    const label = INTERVALS[r.interval]?.label ?? r.interval;
+    embed.addFields(
+      { name: '⏰ Activo', value: `${label}\nPróxima toma: ${r.next ? discordTs(r.next) : '—'}` },
+      { name: '✏️ Cambiar', value: 'Pulsa otro intervalo (queda vencido dentro de ese tiempo)' },
+    );
+  } else {
+    embed.addFields({ name: '⏰ Activo', value: 'Sin recordatorio activo' });
+  }
+
+  embed.addFields({ name: '💌 Aviso', value: 'Te llegaré por DM cuando toque la próxima toma' });
+  return { embeds: [embed], components: intervalRows(r?.interval, userId) };
+}
+
+function reminderEmbed(label) {
+  return new EmbedBuilder()
+    .setColor(0xe77cae)
+    .setTitle('⏰ Hora de tus hormonas 💉')
+    .setDescription('Es hora de tomarte la próxima dosis 💜\nSalud y fuerza para ti 🌸')
+    .setFooter({ text: `Recordatorio ${label} · /hormonas para cambiar o cancelar` });
+}
+
+async function tick(client) {
+  const now = Date.now();
+  let changed = false;
+  for (const [id, r] of Object.entries(state.users)) {
+    let next = new Date(r.next).getTime();
+    if (Number.isNaN(next)) next = now;
+    if (next > now) continue;
+
+    const iv = INTERVALS[r.interval]?.ms ?? 24 * 60 * 60_000;
+    const label = INTERVALS[r.interval]?.label ?? 'el intervalo configurado';
+    let sent = false;
+    try {
+      const user = await client.users.fetch(id);
+      await user.send({ embeds: [reminderEmbed(label)] });
+      sent = true;
+    } catch (err) {
+      console.error('[hormonas] DM a', id, ':', err.message);
+    }
+
+    if (sent) {
+      while (next <= now) next += iv;
+      r.next = new Date(next).toISOString();
+      r.fails = 0;
+    } else {
+      r.fails = (r.fails ?? 0) + 1;
+      if (r.fails >= 5) {
+        while (next <= now) next += iv;
+        r.next = new Date(next).toISOString();
+        r.fails = 0;
+        console.error('[hormonas] 5 fallos de DM seguidos, salto hasta el próximo vencimiento para', id);
+      } else {
+        r.next = new Date(now + 15 * 60_000).toISOString();
+      }
+    }
+    changed = true;
+  }
+  if (changed) saveState();
+}
+
+function start(client) {
+  const run = () => tick(client).catch((err) => console.error('[hormonas] tick:', err.message));
+  setTimeout(run, 5_000);
+  setInterval(run, 60_000);
+  console.log(`[hormonas] ${Object.keys(state.users).length} recordatorio(s) activo(s), tick cada 60 s`);
+}
+
+loadState();
+
+module.exports = { INTERVALS, get, set, cancel, view, start, tick };

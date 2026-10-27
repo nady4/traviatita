@@ -1,6 +1,28 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const otokonoko = require('./otokonoko');
+const astrovials = require('./astrovials');
+const hormonas = require('./hormonas');
+
+const NOTIFY_STORES = {
+  otokonoko: { mod: otokonoko, name: 'Otokonoko Pharmacy' },
+  astrovials: { mod: astrovials, name: 'Astrovials' },
+};
+
+function notifyRow(storeKey) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`notify:${storeKey}:on`)
+      .setLabel('Notificarme cambios de stock')
+      .setEmoji('🔔')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`notify:${storeKey}:off`)
+      .setLabel('Dejar de avisar')
+      .setEmoji('🔕')
+      .setStyle(ButtonStyle.Secondary),
+  );
+}
 
 const commands = [
   new SlashCommandBuilder()
@@ -15,6 +37,12 @@ const commands = [
   new SlashCommandBuilder()
     .setName('otokonoko')
     .setDescription('Stock de estradiol en Otokonoko Pharmacy'),
+  new SlashCommandBuilder()
+    .setName('astrovials')
+    .setDescription('Stock de estradiol en Astrovials'),
+  new SlashCommandBuilder()
+    .setName('hormonas')
+    .setDescription('Recordatorio para tomarte tus hormonas'),
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -29,9 +57,86 @@ client.once('clientReady', async () => {
   console.log('Comandos registrados');
 
   otokonoko.start(client);
+  astrovials.start(client);
+  hormonas.start(client);
 });
 
 client.on('interactionCreate', async (interaction) => {
+  if (interaction.isButton()) {
+    if (interaction.customId.startsWith('hormonas:')) {
+      const [, action, key] = interaction.customId.split(':');
+      try {
+        if (action === 'set' && hormonas.INTERVALS[key]) {
+          const r = hormonas.set(interaction.user.id, key);
+          const label = hormonas.INTERVALS[key].label;
+          console.log(
+            `[${new Date().toISOString()}] recordatorio hormonas de ${interaction.user.tag}: ${label}, próx. ${r.next}`,
+          );
+        } else if (action === 'cancel') {
+          hormonas.cancel(interaction.user.id);
+        } else {
+          return;
+        }
+        await interaction.update(hormonas.view(interaction.user.id));
+      } catch (err) {
+        console.error('[hormonas] botón:', err.message);
+        await interaction
+          .reply({ content: 'Error gestionando el recordatorio.', ephemeral: true })
+          .catch(() => {});
+      }
+      return;
+    }
+
+    if (!interaction.customId.startsWith('notify:')) return;
+    const [, storeKey, mode] = interaction.customId.split(':');
+    const store = NOTIFY_STORES[storeKey];
+    if (!store || (mode !== 'on' && mode !== 'off')) return;
+
+    try {
+      if (!interaction.inGuild()) throw new Error('fuera de servidor');
+      const member = interaction.member;
+      const roleId = store.mod.NOTIFY_ROLE_ID;
+      const subscribed = member.roles.cache.has(roleId);
+
+      if (mode === 'on') {
+        if (subscribed) {
+          await interaction.reply({
+            content: `🔔 Ya estabas suscrito — te seguiré pingheando con los cambios de **${store.name}**.`,
+            ephemeral: true,
+          });
+        } else {
+          await member.roles.add(roleId, 'Alertas de stock: suscripción');
+          await interaction.reply({
+            content: `🔔 Listo — te pinghearé cuando cambie el stock de **${store.name}**.`,
+            ephemeral: true,
+          });
+        }
+      } else {
+        if (!subscribed) {
+          await interaction.reply({
+            content: `🔕 No estabas suscrito — no recibirás ping de **${store.name}**.`,
+            ephemeral: true,
+          });
+        } else {
+          await member.roles.remove(roleId, 'Alertas de stock: desuscripción');
+          await interaction.reply({
+            content: `🔕 Desuscripción confirmada — no recibirás más ping de **${store.name}**.`,
+            ephemeral: true,
+          });
+        }
+      }
+    } catch (err) {
+      console.error(`[${new Date().toISOString()}] botón notify (${interaction.customId}):`, err.message);
+      await interaction
+        .reply({
+          content: 'No pude gestionar tu suscripción (revisa mis permisos de "gestionar roles" y la jerarquía del rol).',
+          ephemeral: true,
+        })
+        .catch(() => {});
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === 'talk') {
@@ -53,7 +158,17 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.commandName === 'otokonoko') {
     await interaction.deferReply();
     await otokonoko.ensureData(client);
-    await interaction.editReply({ embeds: [otokonoko.buildEmbed()] });
+    await interaction.editReply({ embeds: [otokonoko.buildEmbed()], components: [notifyRow('otokonoko')] });
+  }
+
+  if (interaction.commandName === 'astrovials') {
+    await interaction.deferReply();
+    await astrovials.ensureData(client);
+    await interaction.editReply({ embeds: [astrovials.buildEmbed()], components: [notifyRow('astrovials')] });
+  }
+
+  if (interaction.commandName === 'hormonas') {
+    await interaction.reply({ ephemeral: true, ...hormonas.view(interaction.user.id) });
   }
 });
 

@@ -7,11 +7,12 @@ const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132
 const BASE = 'https://otkph.am';
 const STORE_API = `${BASE}/wp-json/wc/store/v1/products`;
 const STATE_FILE = path.join(__dirname, 'stock.json');
+const NOTIFY_ROLE_ID = process.env.OTK_NOTIFY_ROLE_ID ?? '1564743557733027871';
 
 const PRODUCTS = [
   { slug: 'estradiol-valerate', label: 'Valerato de estradiol' },
   { slug: 'estradiol-cypionate', label: 'Cipionato de estradiol' },
-  { slug: 'estradiol-enanthate', label: 'Enanato de estradiol' },
+  { slug: 'estradiol-enanthate', label: 'Enantato de estradiol' },
 ];
 
 let state = { jar: {}, lastCheck: null, lastChange: null, products: {} };
@@ -128,7 +129,11 @@ async function announceChange(client, slug, label, wasInStock, current) {
       .setDescription(
         `**${label}**: ${wasInStock ? '🟢 en stock' : '🔴 agotado'} → ${current.inStock ? '🟢 **en stock**' : '🔴 **agotado**'}`,
       );
-    await channel.send({ embeds: [embed] });
+    await channel.send({
+      content: `<@&${NOTIFY_ROLE_ID}>`,
+      embeds: [embed],
+      allowedMentions: { roles: [NOTIFY_ROLE_ID] },
+    });
   } catch (err) {
     console.error('[otokonoko] anuncio:', err.message);
   }
@@ -228,4 +233,4 @@ function start(client) {
 
 loadState();
 
-module.exports = { PRODUCTS, checkAll, ensureData, buildEmbed, start };
+module.exports = { PRODUCTS, NOTIFY_ROLE_ID, checkAll, ensureData, buildEmbed, start };
