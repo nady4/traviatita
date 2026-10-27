@@ -1,8 +1,9 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const otokonoko = require('./otokonoko');
 const astrovials = require('./astrovials');
 const hormonas = require('./hormonas');
+const dias = require('./dias');
 
 const NOTIFY_STORES = {
   otokonoko: { mod: otokonoko, name: 'Otokonoko Pharmacy' },
@@ -43,6 +44,15 @@ const commands = [
   new SlashCommandBuilder()
     .setName('hormonas')
     .setDescription('Recordatorio para tomarte tus hormonas'),
+  new SlashCommandBuilder()
+    .setName('dias')
+    .setDescription('Cuánto llevás en HRT')
+    .addStringOption((option) =>
+      option
+        .setName('fecha')
+        .setDescription('Fecha de inicio (DD/MM/AAAA o AAAA-MM-DD)')
+        .setRequired(false),
+    ),
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -62,6 +72,39 @@ client.once('clientReady', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+  if (interaction.isModalSubmit()) {
+    if (interaction.customId === 'dias:modal') {
+      const raw = interaction.fields.getTextInputValue('dias:fecha');
+      const date = dias.parse(raw);
+
+      if (!date) {
+        await interaction
+          .reply({
+            content: `Formato inválido \`${raw}\` — usa DD/MM/AAAA (ej. 15/03/2023), sin fechas futuras.`,
+            ephemeral: true,
+          })
+          .catch(() => {});
+        return;
+      }
+
+      dias.set(interaction.user.id, date);
+      console.log(
+        `[${new Date().toISOString()}] inicio HRT de ${interaction.user.tag}: ${date.toISOString().slice(0, 10)}`,
+      );
+      const view = dias.buildView(interaction.user.id);
+      try {
+        if (interaction.isFromMessage()) {
+          await interaction.update(view);
+        } else {
+          await interaction.reply({ ephemeral: true, ...view });
+        }
+      } catch (err) {
+        console.error('[dias] modal submit:', err.message);
+      }
+    }
+    return;
+  }
+
   if (interaction.isButton()) {
     if (interaction.customId.startsWith('hormonas:')) {
       const [, action, key] = interaction.customId.split(':');
@@ -84,6 +127,14 @@ client.on('interactionCreate', async (interaction) => {
           .reply({ content: 'Error gestionando el recordatorio.', ephemeral: true })
           .catch(() => {});
       }
+      return;
+    }
+
+    if (interaction.customId.startsWith('dias:edit')) {
+      const current = dias.get(interaction.user.id)?.date ?? '';
+      await interaction.showModal(dias.buildModal(current)).catch((err) => {
+        console.error('[dias] modal:', err.message);
+      });
       return;
     }
 
@@ -139,6 +190,10 @@ client.on('interactionCreate', async (interaction) => {
 
   if (!interaction.isChatInputCommand()) return;
 
+  if (interaction.isModalSubmit()) {
+    return;
+  }
+
   if (interaction.commandName === 'talk') {
     const mensaje = interaction.options.getString('mensaje');
     await interaction.deferReply({ ephemeral: true });
@@ -169,6 +224,25 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'hormonas') {
     await interaction.reply({ ephemeral: true, ...hormonas.view(interaction.user.id) });
+  }
+
+  if (interaction.commandName === 'dias') {
+    const raw = interaction.options.getString('fecha');
+    if (raw) {
+      const date = dias.parse(raw);
+      if (!date) {
+        await interaction.reply({
+          content: `Fecha inválida \`${raw}\` — usa DD/MM/AAAA o AAAA-MM-DD, sin fechas futuras.`,
+          ephemeral: true,
+        });
+        return;
+      }
+      dias.set(interaction.user.id, date);
+      console.log(
+        `[${new Date().toISOString()}] inicio HRT de ${interaction.user.tag}: ${date.toISOString().slice(0, 10)}`,
+      );
+    }
+    await interaction.reply({ ephemeral: true, ...dias.buildView(interaction.user.id) });
   }
 });
 

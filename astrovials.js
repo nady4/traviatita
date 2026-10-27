@@ -63,7 +63,7 @@ async function announceChange(client, slug, label, wasInStock, current) {
       .setTitle('Astrovials')
       .setURL(`${BASE}/en/shop/${slug}`)
       .setDescription(
-        `**${label}**: ${wasInStock ? '🟢 en stock' : '🔴 agotado'} → ${current.inStock ? '🟢 **en stock**' : '🔴 **agotado**'}\nPrecio: ${priceStr(current)}`,
+        `**${label}**: ${wasInStock ? '🟢 en stock' : '🔴 agotado'} → ${current.inStock ? '🟢 **en stock**' : '🔴 **agotado**'}`,
       );
     await channel.send({
       content: `<@&${NOTIFY_ROLE_ID}>`,
@@ -143,7 +143,7 @@ function buildEmbed() {
     embed.addFields({
       name: s ? `${s.inStock ? '🟢' : '🔴'} ${p.label}` : `⏳ ${p.label}`,
       value: s
-        ? `${s.inStock ? 'En stock' : 'Agotado'} · ${s.price}${lastSeen}\n[Ver producto](${BASE}/en/shop/${p.slug})`
+        ? `${s.inStock ? 'En stock' : 'Agotado'}${lastSeen}\n[Ver producto](${BASE}/en/shop/${p.slug})`
         : 'Sin datos de stock aún',
     });
   }
