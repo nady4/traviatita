@@ -85,7 +85,7 @@ function view(userId) {
     embed.addFields({ name: '⏰ Activo', value: 'Sin recordatorio activo' });
   }
 
-  embed.addFields({ name: '💌 Aviso', value: 'Te llegaré por DM cuando toque la próxima toma' });
+  embed.addFields({ name: '💌 Aviso', value: 'Te mando un mensaje cuando tengas que tomar de nuevo' });
   return { embeds: [embed], components: intervalRows(r?.interval, userId) };
 }
 
@@ -93,7 +93,7 @@ function reminderEmbed(label) {
   return new EmbedBuilder()
     .setColor(0xe77cae)
     .setTitle('⏰ Hora de tus hormonas 💉')
-    .setDescription('Es hora de tomarte la próxima dosis 💜\nSalud y fuerza para ti 🌸')
+    .setDescription('Es hora de tomarte la próxima dosis 💜\nRecordá pajearte para que no se te atrofie el bitito')
     .setFooter({ text: `Recordatorio ${label} · /hormonas para cambiar o cancelar` });
 }
 
