@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { create } = require('./store');
 
-const STATE_FILE = path.join(__dirname, 'hormonas.json');
 const TAG = '⏰ [hormonas]';
+
+const STORE = create('hormonas.json', TAG);
 
 const INTERVALS = {
   '12h': { ms: 12 * 60 * 60_000, label: 'cada 12 horas' },
@@ -18,16 +18,12 @@ const INTERVALS = {
 let state = { users: {} };
 
 function loadState() {
-  try {
-    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    state = { users: raw.users ?? {} };
-  } catch {
-    state = { users: {} };
-  }
+  const raw = STORE.load({ users: {} });
+  state = { users: raw.users ?? {} };
 }
 
 function saveState() {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  STORE.save(state);
 }
 
 function get(userId) {

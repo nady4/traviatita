@@ -1,14 +1,13 @@
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const { EmbedBuilder } = require('discord.js');
+const { create } = require('./store');
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 const BASE = 'https://otkph.am';
 const STORE_API = `${BASE}/wp-json/wc/store/v1/products`;
-const STATE_FILE = path.join(__dirname, 'stock.json');
-const NOTIFY_ROLE_ID = process.env.OTK_NOTIFY_ROLE_ID ?? '1564743557733027871';
 const TAG = '💊 [otokonoko]';
+const STORE = create('stock.json', TAG);
+const NOTIFY_ROLE_ID = process.env.OTK_NOTIFY_ROLE_ID ?? '1564743557733027871';
 
 const PRODUCTS = [
   { slug: 'estradiol-valerate', label: 'Valerato de estradiol' },
@@ -20,21 +19,17 @@ let state = { jar: {}, lastCheck: null, lastChange: null, products: {} };
 let inFlight = null;
 
 function loadState() {
-  try {
-    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    state = {
-      jar: raw.jar ?? {},
-      lastCheck: raw.lastCheck ?? null,
-      lastChange: raw.lastChange ?? null,
-      products: raw.products ?? {},
-    };
-  } catch {
-    state = { jar: {}, lastCheck: null, lastChange: null, products: {} };
-  }
+  const raw = STORE.load({});
+  state = {
+    jar: raw.jar ?? {},
+    lastCheck: raw.lastCheck ?? null,
+    lastChange: raw.lastChange ?? null,
+    products: raw.products ?? {},
+  };
 }
 
 function saveState() {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  STORE.save(state);
 }
 
 function cookieHeader() {

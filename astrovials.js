@@ -1,12 +1,11 @@
-const fs = require('fs');
-const path = require('path');
 const { EmbedBuilder } = require('discord.js');
+const { create } = require('./store');
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 const BASE = 'https://astrovials.com';
-const STATE_FILE = path.join(__dirname, 'astro.json');
 const NOTIFY_ROLE_ID = process.env.ASTRO_NOTIFY_ROLE_ID ?? '1564743677601915051';
 const TAG = '🚀 [astrovials]';
+const STORE = create('astro.json', TAG);
 
 const PRODUCTS = [
   { slug: 'estradiol-valerate-mct', label: 'Valerato de estradiol (MCT)' },
@@ -19,20 +18,16 @@ let state = { lastCheck: null, lastChange: null, products: {} };
 let inFlight = null;
 
 function loadState() {
-  try {
-    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    state = {
-      lastCheck: raw.lastCheck ?? null,
-      lastChange: raw.lastChange ?? null,
-      products: raw.products ?? {},
-    };
-  } catch {
-    state = { lastCheck: null, lastChange: null, products: {} };
-  }
+  const raw = STORE.load({});
+  state = {
+    lastCheck: raw.lastCheck ?? null,
+    lastChange: raw.lastChange ?? null,
+    products: raw.products ?? {},
+  };
 }
 
 function saveState() {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  STORE.save(state);
 }
 
 async function fetchProductPage(slug) {

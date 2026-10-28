@@ -1,22 +1,17 @@
-const fs = require('fs');
-const path = require('path');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { create } = require('./store');
 
-const STATE_FILE = path.join(__dirname, 'dias.json');
+const STORE = create('dias.json', '⏳ [dias]');
 
 let state = { users: {} };
 
 function loadState() {
-  try {
-    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    state = { users: raw.users ?? {} };
-  } catch {
-    state = { users: {} };
-  }
+  const raw = STORE.load({ users: {} });
+  state = { users: raw.users ?? {} };
 }
 
 function saveState() {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  STORE.save(state);
 }
 
 function parse(str) {

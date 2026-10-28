@@ -1,22 +1,20 @@
-const fs = require('fs');
-const path = require('path');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const store = require('./store');
 
-const STATE_FILE = path.join(__dirname, 'quilombo.json');
+const TAG = '💥 [quilombo]';
+const ANNOUNCE_CHANNEL_ID = process.env.QUILOMBO_ANNOUNCE_CHANNEL_ID ?? '1527109090965192774';
+const RESET_ROLES = ['1527108970857234595', '1527108969741422672'];
+const STORE = store.create('quilombo.json', TAG);
 
 let state = { chats: {} };
 
 function loadState() {
-  try {
-    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    state = { chats: raw.chats ?? {} };
-  } catch {
-    state = { chats: {} };
-  }
+  const raw = STORE.load({ chats: {} });
+  state = { chats: raw.chats ?? {} };
 }
 
 function saveState() {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  STORE.save(state);
 }
 
 function get(key) {
@@ -58,6 +56,12 @@ function row() {
   );
 }
 
+function canReset(interaction) {
+  if (!interaction.inGuild()) return false;
+  const cache = interaction.member?.roles?.cache;
+  return !!cache && RESET_ROLES.some((id) => cache.has(id));
+}
+
 function buildView(key) {
   if (!get(key)) {
     set(key);
@@ -75,15 +79,45 @@ function buildView(key) {
 }
 
 function reset(key) {
+  const prev = get(key);
+  let streak = null;
+  if (prev) {
+    const e = elapsed(new Date(prev.ts));
+    streak = fmt(e.days, e.hours);
+  }
   set(key);
   const start = new Date(get(key).ts);
   const { days, hours } = elapsed(start);
-  return {
+  const view = {
     content: `💥 Uh, se armó un quilombo. La cuenta vuelve a empezar: ${fmt(days, hours)} sin quilombos desde el ${discordTs(start)}. Suerte 🫡`,
     components: [row()],
   };
+  return { view, streak };
+}
+
+function announce(client, { user, guild, streak }) {
+  if (!client) return;
+  client.channels
+    .fetch(ANNOUNCE_CHANNEL_ID)
+    .then((channel) => {
+      if (!channel?.isTextBased()) throw new Error('canal de anuncios inválido');
+      const embed = new EmbedBuilder()
+        .setColor(0xe74c3c)
+        .setTitle('💥 Se armó un quilombo')
+        .setDescription(
+          [
+            `**${user?.tag ?? 'Alguien'}** apretó el botón${guild ? ` en **${guild.name}**` : ' (servidor no registrado)'}.`,
+            streak ? `Racha perdida: ${streak} sin quilombos 💀` : null,
+            `La cuenta vuelve a arrancar desde el ${discordTs(new Date())} 🫡`,
+          ]
+            .filter(Boolean)
+            .join('\n'),
+        );
+      return channel.send({ embeds: [embed] });
+    })
+    .catch((err) => console.error(`${TAG} ⚠️ anuncio: ${err.message}`));
 }
 
 loadState();
 
-module.exports = { get, set, buildView, reset };
+module.exports = { get, set, buildView, reset, announce, canReset, RESET_ROLES };
