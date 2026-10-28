@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 const otokonoko = require('./otokonoko');
 const astrovials = require('./astrovials');
 const hormonas = require('./hormonas');
@@ -79,7 +79,7 @@ client.on('interactionCreate', async (interaction) => {
         await interaction
           .reply({
             content: `Formato inválido \`${raw}\` — usa DD/MM/AAAA (ej. 15/03/2023), sin fechas futuras.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           })
           .catch(() => {});
         return;
@@ -94,7 +94,7 @@ client.on('interactionCreate', async (interaction) => {
         if (interaction.isFromMessage()) {
           await interaction.update(view);
         } else {
-          await interaction.reply({ ephemeral: true, ...view });
+          await interaction.reply({ flags: MessageFlags.Ephemeral, ...view });
         }
       } catch (err) {
         console.error('⏳ [dias] ⚠️ modal submit:', err.message);
@@ -122,7 +122,7 @@ client.on('interactionCreate', async (interaction) => {
       } catch (err) {
         console.error('⏰ [hormonas] ⚠️ botón:', err.message);
         await interaction
-          .reply({ content: 'Error gestionando el recordatorio.', ephemeral: true })
+          .reply({ content: 'Error gestionando el recordatorio.', flags: MessageFlags.Ephemeral })
           .catch(() => {});
       }
       return;
@@ -133,7 +133,7 @@ client.on('interactionCreate', async (interaction) => {
         await interaction
           .reply({
             content: '🚫 No podés reiniciar la cuenta — solo quien tenga uno de los roles autorizados puede reportar el quilombo.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           })
           .catch(() => {});
         return;
@@ -151,7 +151,7 @@ client.on('interactionCreate', async (interaction) => {
       } catch (err) {
         console.error('💥 [quilombo] ⚠️ botón:', err.message);
         await interaction
-          .reply({ content: 'No pude reiniciar la cuenta.', ephemeral: true })
+          .reply({ content: 'No pude reiniciar la cuenta.', flags: MessageFlags.Ephemeral })
           .catch(() => {});
       }
       return;
@@ -180,26 +180,26 @@ client.on('interactionCreate', async (interaction) => {
         if (subscribed) {
           await interaction.reply({
             content: `🔔 Ya estabas suscrito — te seguiré pingheando con los cambios de **${store.name}**.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         } else {
           await member.roles.add(roleId, 'Alertas de stock: suscripción');
           await interaction.reply({
             content: `🔔 Listo — te pinghearé cuando cambie el stock de **${store.name}**.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       } else {
         if (!subscribed) {
           await interaction.reply({
             content: `🔕 No estabas suscrito — no recibirás ping de **${store.name}**.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         } else {
           await member.roles.remove(roleId, 'Alertas de stock: desuscripción');
           await interaction.reply({
             content: `🔕 Desuscripción confirmada — no recibirás más ping de **${store.name}**.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       }
@@ -208,7 +208,7 @@ client.on('interactionCreate', async (interaction) => {
       await interaction
         .reply({
           content: 'No pude gestionar tu suscripción (revisa mis permisos de "gestionar roles" y la jerarquía del rol).',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         })
         .catch(() => {});
     }
@@ -219,7 +219,7 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'talk') {
     const mensaje = interaction.options.getString('mensaje');
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       await interaction.channel.send(mensaje);
@@ -246,7 +246,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   if (interaction.commandName === 'hormonas') {
-    await interaction.reply({ ephemeral: true, ...hormonas.view(interaction.user.id) });
+    await interaction.reply({ flags: MessageFlags.Ephemeral, ...hormonas.view(interaction.user.id) });
   }
 
   if (interaction.commandName === 'dias') {
