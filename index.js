@@ -4,6 +4,7 @@ const otokonoko = require('./otokonoko');
 const astrovials = require('./astrovials');
 const hormonas = require('./hormonas');
 const dias = require('./dias');
+const quilombo = require('./quilombo');
 
 const NOTIFY_STORES = {
   otokonoko: { mod: otokonoko, name: 'Otokonoko Pharmacy' },
@@ -47,6 +48,9 @@ const commands = [
   new SlashCommandBuilder()
     .setName('dias')
     .setDescription('Cuánto llevás en HRT'),
+  new SlashCommandBuilder()
+    .setName('quilombo')
+    .setDescription('Días sin quilombos en el servidor'),
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -119,6 +123,21 @@ client.on('interactionCreate', async (interaction) => {
         console.error('⏰ [hormonas] ⚠️ botón:', err.message);
         await interaction
           .reply({ content: 'Error gestionando el recordatorio.', ephemeral: true })
+          .catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.customId.startsWith('quilombo:reset')) {
+      try {
+        const key = interaction.guildId ?? interaction.user.id;
+        const view = quilombo.reset(key);
+        console.log(`💥 [${new Date().toISOString()}] ${interaction.user.tag}: quilombo — contador a cero`);
+        await interaction.update(view);
+      } catch (err) {
+        console.error('💥 [quilombo] ⚠️ botón:', err.message);
+        await interaction
+          .reply({ content: 'No pude reiniciar la cuenta.', ephemeral: true })
           .catch(() => {});
       }
       return;
@@ -218,6 +237,11 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'dias') {
     await interaction.reply({ ...dias.buildView(interaction.user.id) });
+  }
+
+  if (interaction.commandName === 'quilombo') {
+    const key = interaction.guildId ?? interaction.user.id;
+    await interaction.reply({ ...quilombo.buildView(key) });
   }
 });
 
