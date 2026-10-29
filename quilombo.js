@@ -104,15 +104,7 @@ function announce(client, { user, guild, streak }) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
         .setTitle('💥 Se armó un quilombo')
-        .setDescription(
-          [
-            `**${user?.tag ?? 'Alguien'}** apretó el botón${guild ? ` en **${guild.name}**` : ' (servidor no registrado)'}.`,
-            streak ? `Racha perdida: ${streak} sin quilombos 💀` : null,
-            `La cuenta vuelve a arrancar desde el ${discordTs(new Date())} 🫡`,
-          ]
-            .filter(Boolean)
-            .join('\n'),
-        );
+        .setDescription(streak ? `Racha perdida: ${streak} sin quilombos 💀` : null);
       return channel.send({ embeds: [embed] });
     })
     .catch((err) => console.error(`${TAG} ⚠️ anuncio: ${err.message}`));
