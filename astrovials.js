@@ -17,6 +17,20 @@ const PRODUCTS = [
 let state = { lastCheck: null, lastChange: null, products: {} };
 let inFlight = null;
 
+function parseMin(raw, fallback) {
+  const n = Number.parseInt(raw ?? '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
+const STALE_ANNOUNCE_MS = parseMin(process.env.ASTRO_STALE_ANNOUNCE_MIN, 30) * 60_000;
+
+function fmtAge(ms) {
+  if (!Number.isFinite(ms)) return 'tiempo desconocido';
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  return h > 0 ? `~${h}h ${m}m` : `~${m}m`;
+}
+
 function loadState() {
   const raw = STORE.load({});
   state = {
@@ -78,23 +92,31 @@ async function checkAll(client) {
   for (const p of PRODUCTS) {
     try {
       const prod = await fetchProductPage(p.slug);
-      const now = new Date().toISOString();
+      const now = new Date();
+      const nowIso = now.toISOString();
       const inStock = prod.stock > 0;
       const prev = state.products[p.slug];
       const changed = !!prev && prev.inStock !== inStock;
+      const prevRead = prev ? Date.parse(prev.lastRead ?? state.lastCheck ?? '') : NaN;
+      const prevAgeMs = Number.isFinite(prevRead) ? Math.max(0, now.getTime() - prevRead) : Infinity;
+      const staleAnnounce = STALE_ANNOUNCE_MS > 0 && changed && prevAgeMs > STALE_ANNOUNCE_MS;
 
       state.products[p.slug] = {
         name: prod.name,
         price: priceStr(prod),
         stock: prod.stock,
         inStock,
-        lastInStock: inStock ? now : prev?.lastInStock ?? null,
-        lastChange: changed ? now : prev?.lastChange ?? null,
+        lastRead: nowIso,
+        lastInStock: inStock ? nowIso : prev?.lastInStock ?? null,
+        lastChange: staleAnnounce ? prev?.lastChange ?? null : changed ? nowIso : prev?.lastChange ?? null,
       };
+      saveState();
       badges.push(inStock ? '🟢' : '🔴');
-      if (changed) {
+      if (staleAnnounce) {
+        console.log(`${TAG} 🕓 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} reconciliado tras corte de ${fmtAge(prevAgeMs)} (sin anuncio)`);
+      } else if (changed) {
         console.log(`${TAG} 🔔 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} (${priceStr(prod)} · ${prod.stock} u.)`);
-        state.lastChange = now;
+        state.lastChange = nowIso;
         await announceChange(client, p.slug, p.label, prev.inStock, state.products[p.slug]);
       } else if (!prev) {
         console.log(`${TAG} ➕ ${p.label}: ${inStock ? '🟢' : '🔴'} (primera lectura) · ${priceStr(prod)}`);
@@ -163,7 +185,8 @@ function start(client) {
   const run = () => checkAll(client).catch((err) => console.error(`${TAG} ⚠️`, err.message));
   setTimeout(run, 45_000);
   setInterval(run, minutes * 60_000);
-  console.log(`${TAG} ✅ rastreo: ${PRODUCTS.length} productos cada ${minutes} min (${BASE.replace('https://', '')})`);
+  const age = state.lastCheck ? `, estado de hace ${fmtAge(Date.now() - Date.parse(state.lastCheck))}` : ', estado vacío (primera lectura al vuelo)';
+  console.log(`${TAG} ✅ rastreo: ${PRODUCTS.length} productos cada ${minutes} min (${BASE.replace('https://', '')})${age}`);
 }
 
 loadState();
