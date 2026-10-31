@@ -5,6 +5,7 @@ const astrovials = require('./astrovials');
 const hormonas = require('./hormonas');
 const dias = require('./dias');
 const quilombo = require('./quilombo');
+const dado = require('./dado');
 
 const NOTIFY_STORES = {
   otokonoko: { mod: otokonoko, name: 'Otokonoko Pharmacy' },
@@ -51,6 +52,9 @@ const commands = [
   new SlashCommandBuilder()
     .setName('quilombo')
     .setDescription('Días sin quilombos en el servidor'),
+  new SlashCommandBuilder()
+    .setName('dado')
+    .setDescription('🎲 ¡Tirá un dado! d3 a d100, personalizado dX o rango al azar'),
 ].map((command) => command.toJSON());
 
 const client = new Client({
@@ -71,6 +75,60 @@ client.once('clientReady', async () => {
 
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith('dado:modal:')) {
+      const kind = interaction.customId.split(':')[2];
+      try {
+        let r = null;
+        if (kind === 'sides') {
+          const sides = dado.parseSides(interaction.fields.getTextInputValue('dado:lados'));
+          if (!sides) {
+            await interaction
+              .reply({
+                content: 'Ese número no vale — poné caras enteras entre 2 y 1.000.000.',
+                flags: MessageFlags.Ephemeral,
+              })
+              .catch(() => {});
+            return;
+          }
+          r = dado.resultStandard(sides);
+        } else if (kind === 'range') {
+          const range = dado.parseRange(
+            interaction.fields.getTextInputValue('dado:min'),
+            interaction.fields.getTextInputValue('dado:max'),
+          );
+          if (!range) {
+            await interaction
+              .reply({
+                content: 'Ese rango no vale — poné dos enteros (hasta ±1 billón) con mínimo ≤ máximo.',
+                flags: MessageFlags.Ephemeral,
+              })
+              .catch(() => {});
+            return;
+          }
+          r = dado.resultRange(range.min, range.max);
+        } else {
+          return;
+        }
+        const view = dado.buildView(interaction.user.id, r);
+        try {
+          if (interaction.isFromMessage()) {
+            await interaction.update(view);
+          } else {
+            await interaction.reply({ flags: MessageFlags.Ephemeral, ...view });
+          }
+        } finally {
+          console.log(
+            `🎲 [${new Date().toISOString()}] ${interaction.user.tag}: tirada ${r.name} → ${r.value}`,
+          );
+        }
+      } catch (err) {
+        console.error('🎲 [dado] ⚠️ modal submit:', err.message);
+        await interaction
+          .reply({ content: 'No pude registrar la tirada.', flags: MessageFlags.Ephemeral })
+          .catch(() => {});
+      }
+      return;
+    }
     if (interaction.customId === 'dias:modal') {
       const raw = interaction.fields.getTextInputValue('dias:fecha');
       const date = dias.parse(raw);
@@ -165,6 +223,37 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+    if (interaction.customId.startsWith('dado:custom')) {
+      await interaction.showModal(dado.buildSidesModal()).catch((err) => {
+        console.error('🎲 [dado] ⚠️ modal:', err.message);
+      });
+      return;
+    }
+
+    if (interaction.customId.startsWith('dado:range')) {
+      await interaction.showModal(dado.buildRangeModal()).catch((err) => {
+        console.error('🎲 [dado] ⚠️ modal:', err.message);
+      });
+      return;
+    }
+
+    if (interaction.customId.startsWith('dado:roll')) {
+      const sides = Number(interaction.customId.split(':')[2]);
+      try {
+        const r = dado.resultStandard(sides);
+        await interaction.update(dado.buildView(interaction.user.id, r));
+        console.log(
+          `🎲 [${new Date().toISOString()}] ${interaction.user.tag}: tirada ${r.name} → ${r.value}`,
+        );
+      } catch (err) {
+        console.error('🎲 [dado] ⚠️ botón:', err.message);
+        await interaction
+          .reply({ content: 'No pude registrar la tirada.', flags: MessageFlags.Ephemeral })
+          .catch(() => {});
+      }
+      return;
+    }
+
     if (!interaction.customId.startsWith('notify:')) return;
     const [, storeKey, mode] = interaction.customId.split(':');
     const store = NOTIFY_STORES[storeKey];
@@ -256,6 +345,10 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.commandName === 'quilombo') {
     const key = interaction.guildId ?? interaction.user.id;
     await interaction.reply({ ...quilombo.buildView(key) });
+  }
+
+  if (interaction.commandName === 'dado') {
+    await interaction.reply(dado.buildView());
   }
 });
 
