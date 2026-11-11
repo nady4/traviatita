@@ -375,7 +375,7 @@ client.on('interactionCreate', async (interaction) => {
     try {
       const r = await travestir.assignAll(interaction.guild);
       await interaction.editReply(
-        `🎭 Listo: rol traviatense dado a **${r.added}** miembros (${r.skipped} omitidos, ${r.failed} fallaron).`,
+        `🎭 Listo: rol traviatense dado a **${r.added}** miembros (${r.already} ya lo tenían, ${r.skipped} omitidos, ${r.failed} fallaron).`,
       );
     } catch (err) {
       console.error(`🎭 [travestir] ⚠️ ${err.message}`);

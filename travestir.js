@@ -16,12 +16,17 @@ function canUse(interaction) {
 async function assignAll(guild) {
   const members = await guild.members.fetch();
   let added = 0;
+  let already = 0;
   let skipped = 0;
   let failed = 0;
 
   for (const member of members.values()) {
-    if (excluded(member) || member.roles.cache.has(ROLE_TRAVIATENSE)) {
+    if (excluded(member)) {
       skipped++;
+      continue;
+    }
+    if (member.roles.cache.has(ROLE_TRAVIATENSE)) {
+      already++;
       continue;
     }
     try {
@@ -33,13 +38,13 @@ async function assignAll(guild) {
     }
   }
 
-  console.log(`${TAG} ✅ ${added} con rol, ${skipped} omitidos, ${failed} fallaron`);
-  return { total: members.size, added, skipped, failed };
+  console.log(`${TAG} ✅ ${added} con rol, ${already} ya lo tenían, ${skipped} omitidos, ${failed} fallaron`);
+  return { total: members.size, added, already, skipped, failed };
 }
 
 function start(client) {
   client.on('guildMemberAdd', async (member) => {
-    if (excluded(member)) return;
+    if (excluded(member) || member.roles.cache.has(ROLE_TRAVIATENSE)) return;
     try {
       await member.roles.add(ROLE_TRAVIATENSE, 'Nuevo miembro del servidor');
       console.log(`${TAG} ✅ ${member.user.tag} recibió el rol`);
