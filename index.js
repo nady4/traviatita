@@ -364,6 +364,13 @@ client.on('interactionCreate', async (interaction) => {
       });
       return;
     }
+    if (!travestir.canUse(interaction)) {
+      await interaction.reply({
+        content: '🚫 Solo quienes tienen el rol 200kg pueden usar este comando.',
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     try {
       const r = await travestir.assignAll(interaction.guild);

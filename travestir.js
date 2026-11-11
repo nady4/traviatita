@@ -2,9 +2,15 @@ const TAG = '🎭 [travestir]';
 
 const ROLE_TRAVIATENSE = process.env.ROL_TRAVIATENSE ?? '1570037127620853843';
 const ROLE_BOT = process.env.ROL_BOT ?? '1527109023684624475';
+const ROLE_200KG = process.env.ROL_200KG ?? '1527108970857234595';
 
 function excluded(member) {
   return member.user.bot || member.roles.cache.has(ROLE_BOT);
+}
+
+function canUse(interaction) {
+  if (!interaction.inGuild()) return false;
+  return !!interaction.member?.roles?.cache?.has(ROLE_200KG);
 }
 
 async function assignAll(guild) {
@@ -43,4 +49,4 @@ function start(client) {
   });
 }
 
-module.exports = { ROLE_TRAVIATENSE, ROLE_BOT, assignAll, start };
+module.exports = { ROLE_TRAVIATENSE, ROLE_BOT, ROLE_200KG, canUse, assignAll, start };
