@@ -1,8 +1,9 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const config = require("../config");
 
 const NOTIFY_STORES = {
-  otokonoko: { name: "Otokonoko Pharmacy" },
-  astrovials: { name: "Astrovials" }
+  otokonoko: { name: "Otokonoko Pharmacy", roleId: config.roles.otokonoko },
+  astrovials: { name: "Astrovials", roleId: config.roles.astrovials }
 };
 
 function notifyRow(storeKey) {

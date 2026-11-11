@@ -1,5 +1,4 @@
 const { MessageFlags } = require("discord.js");
-const config = require("../config");
 const { NOTIFY_STORES } = require("../ui/stockNotify");
 
 module.exports = {
@@ -11,25 +10,25 @@ module.exports = {
     try {
       if (!interaction.inGuild()) throw new Error("fuera de servidor");
       const member = interaction.member;
-      const roleId = config.roles.admin200kg;
+      const roleId = store.roleId;
       const subscribed = member.roles.cache.has(roleId);
 
       if (mode === "on") {
         if (subscribed) {
           await interaction.reply({
-            content: `🔔 Ya estabas suscrito — te seguiré pingheando con los cambios de **${store.name}**.`,
+            content: `🔔 Ya estabas suscritx — te seguiré pingheando con los cambios de **${store.name}**.`,
             flags: MessageFlags.Ephemeral
           });
         } else {
           await member.roles.add(roleId, "Alertas de stock: suscripción");
           await interaction.reply({
-            content: `🔔 Listo — te pinghearé cuando cambie el stock de **${store.name}**.`,
+            content: `🔔 Listo — te pingearé cuando cambie el stock de **${store.name}**.`,
             flags: MessageFlags.Ephemeral
           });
         }
       } else if (!subscribed) {
         await interaction.reply({
-          content: `🔕 No estabas suscrito — no recibirás ping de **${store.name}**.`,
+          content: `🔕 No estabas suscritx — no recibirás ping de **${store.name}**.`,
           flags: MessageFlags.Ephemeral
         });
       } else {

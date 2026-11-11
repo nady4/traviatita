@@ -18,12 +18,12 @@ Bot de Discord para el servidor de <a href="https://discord.gg/zVAC3NBz43">Opera
 ```bash
 npm install
 cp .env.example .env
-# completar .env con el token, roles y canales del servidor
+# completar .env con el token, roles, canales y GUILD_ID del servidor
 npm run deploy   # registra los slash commands
 npm start
 ```
 
-> 📌 `npm run deploy` hay que correrlo al menos una vez y cada vez que cambie la definición de un comando. El bot ya no registra los comandos en cada arranque para evitar llamadas innecesarias a la API de Discord. Los comandos globales pueden tardar hasta una hora en propagarse.
+> 📌 `npm run deploy` hay que correrlo al menos una vez y cada vez que cambie la definición de un comando. Con `GUILD_ID` definido, los comandos se registran en ese servidor y se actualizan al instante; además se eliminan los comandos globales para evitar duplicados. Sin `GUILD_ID`, se registran globalmente y pueden tardar hasta una hora en propagarse.
 
 Para desarrollo con recarga automática:
 
@@ -48,15 +48,18 @@ npm run dev
 | Variable                       | Obligatoria | Descripción                                                                                      |
 | ------------------------------ | ----------- | ------------------------------------------------------------------------------------------------ |
 | `TOKEN`                        | ✅ Sí       | Token del bot de Discord.                                                                        |
+| `GUILD_ID`                     | ➖ No       | Servidor donde se registran los comandos (actualización instantánea). Si no se define, se registran globalmente. |
 | `STATE_DIR`                    | ➖ No       | Carpeta donde se guardan los JSON de estado. Si no se define, se usa el directorio del proyecto. |
 | `ROLE_TRAVIATENSE_ID`          | ✅ Sí       | Rol que asigna `/travestir` y que reciben los nuevos miembros.                                   |
 | `ROLE_BOT_ID`                  | ✅ Sí       | Rol de bots, excluido de `/travestir`.                                                           |
-| `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir` y rol al que se pinguean los avisos de stock.              |
+| `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir`.                                                           |
+| `ROLE_OTOKONOKO_ID`            | ✅ Sí       | Rol que se pinguea en los avisos de stock de Otokonoko y al que se suscriben los usuarios.       |
+| `ROLE_ASTROVIALS_ID`           | ✅ Sí       | Rol que se pinguea en los avisos de stock de Astrovials y al que se suscriben los usuarios.      |
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
 
-`.env` es la fuente de verdad: el código no define valores de reemplazo para estas variables. La única excepción es `STATE_DIR`, que al no estar definida usa el directorio del proyecto.
+`.env` es la fuente de verdad: el código no define valores de reemplazo para estas variables. Las únicas excepciones son `STATE_DIR` y `GUILD_ID`, que al no estar definidas usan el directorio del proyecto y el registro global de comandos respectivamente.
 
 La configuración se centraliza en `config.js`, que carga `.env` una sola vez y valida al arrancar que no falte ninguna variable obligatoria, que los roles y canales sean IDs de Discord válidos y que `STOCK_CHECK_MINUTES` sea un entero positivo. Si algo no cumple, el proceso falla con un mensaje indicando la variable problemática.
 

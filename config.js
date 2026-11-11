@@ -14,6 +14,11 @@ function snowflake(name) {
   return value;
 }
 
+function optionalSnowflake(name) {
+  if (!process.env[name]) return undefined;
+  return snowflake(name);
+}
+
 function positiveInt(name) {
   const value = Number.parseInt(required(name), 10);
   if (!Number.isInteger(value) || value < 1) {
@@ -24,10 +29,13 @@ function positiveInt(name) {
 
 module.exports = {
   token: required("TOKEN"),
+  guildId: optionalSnowflake("GUILD_ID"),
   roles: {
     traviatense: snowflake("ROLE_TRAVIATENSE_ID"),
     bot: snowflake("ROLE_BOT_ID"),
-    admin200kg: snowflake("ROLE_200KG_ID")
+    admin200kg: snowflake("ROLE_200KG_ID"),
+    otokonoko: snowflake("ROLE_OTOKONOKO_ID"),
+    astrovials: snowflake("ROLE_ASTROVIALS_ID")
   },
   channels: {
     quilombo: snowflake("CHANNEL_ANNOUNCE_QUILOMBO_ID"),

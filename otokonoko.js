@@ -9,7 +9,7 @@ const BASE = "https://otkph.am";
 const STORE_API = `${BASE}/wp-json/wc/store/v1/products`;
 const TAG = "💊 [otokonoko]";
 const STORE = create("stock.json", TAG);
-const ROLE_200KG = roles.admin200kg;
+const ROLE_OTOKONOKO = roles.otokonoko;
 const PRODUCTS = [
   { slug: "estradiol-valerate", label: "Valerato de estradiol" },
   { slug: "estradiol-cypionate", label: "Cipionato de estradiol" },
@@ -148,9 +148,9 @@ async function announceChange(client, slug, label, wasInStock, current) {
         `**${label}**: ${wasInStock ? "🟢 en stock" : "🔴 agotado"} → ${current.inStock ? "🟢 **en stock**" : "🔴 **agotado**"}`
       );
     await channel.send({
-      content: `<@&${ROLE_200KG}>`,
+      content: `<@&${ROLE_OTOKONOKO}>`,
       embeds: [embed],
-      allowedMentions: { roles: [ROLE_200KG] }
+      allowedMentions: { roles: [ROLE_OTOKONOKO] }
     });
   } catch (err) {
     console.error(`${TAG} ⚠️ no pude anunciar:`, err.message);

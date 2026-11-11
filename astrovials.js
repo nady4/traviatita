@@ -4,7 +4,7 @@ const { roles, channels, stockCheckMinutes } = require('./config');
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 const BASE = 'https://astrovials.com';
-const NOTIFY_ROLE_ID = roles.admin200kg;
+const NOTIFY_ROLE_ID = roles.astrovials;
 const TAG = '🚀 [astrovials]';
 const STORE = create('astro.json', TAG);
 
