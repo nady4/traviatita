@@ -9,7 +9,7 @@ module.exports = {
   once: true,
 
   execute(client) {
-    console.log(`☑️ Conectado como ${client.user.tag}`);
+    console.log(`${client.user.tag} conectada 🫪`);
     otokonoko.start(client);
     astrovials.start(client);
     hormonas.start(client);
