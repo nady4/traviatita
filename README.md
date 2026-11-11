@@ -63,6 +63,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | 💥 `/quilombo` | Cuenta los días sin quilombos; incluye un botón para reiniciar la cuenta (solo roles autorizados). |
 | 🎲 `/dado` | Tira dados d3–d100, un dX personalizado o un número al azar en un rango. |
 | 🎭 `/travestir` | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg). |
+| 📦 `/github` | Muestra el repositorio de GitHub del proyecto. |
 
 ## 💾 Persistencia
 
