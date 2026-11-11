@@ -4,7 +4,7 @@ const hormonas = require("../hormonas");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("hormonas")
-    .setDescription("Recordatorio para tomarte tus hormonas"),
+    .setDescription("🔔 Recordatorio para tomarte tus hormonas"),
 
   async execute(interaction) {
     await interaction.reply({

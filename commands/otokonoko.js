@@ -5,7 +5,7 @@ const { notifyRow } = require("../ui/stockNotify");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("otokonoko")
-    .setDescription("Stock de estradiol en Otokonoko Pharmacy"),
+    .setDescription("💊 Stock de estradiol en Otokonoko Pharmacy"),
 
   async execute(interaction) {
     await interaction.deferReply();

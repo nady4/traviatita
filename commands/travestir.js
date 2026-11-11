@@ -5,7 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("travestir")
     .setDescription(
-      "🎭 Da el rol traviatense a todo el servidor (excepto bots)"
+      "🏳️‍⚧️ Da el rol traviatense a todo el servidor (excepto bots)"
     ),
 
   async execute(interaction) {
@@ -30,12 +30,12 @@ module.exports = {
     try {
       const r = await travestir.assignAll(interaction.guild);
       await interaction.editReply(
-        `🎭 Listo: rol traviatense dado a **${r.added}** miembros (${r.already} ya lo tenían, ${r.skipped} omitidos, ${r.failed} fallaron).`
+        `✅ Listo: rol traviatense dado a **${r.added}** miembros (${r.already} ya lo tenían, ${r.skipped} omitidos, ${r.failed} fallaron).`
       );
     } catch (err) {
-      console.error(`🎭 [travestir] ⚠️ ${err.message}`);
+      console.error(`🏳️‍⚧️ [travestir] ⚠️ ${err.message}`);
       await interaction.editReply(
-        'No pude repartir el rol (revisa mis permisos de "gestionar roles" y la jerarquía del rol).'
+        '❌ No pude repartir el rol (revisa mis permisos de "gestionar roles" y la jerarquía del rol).'
       );
     }
   }
