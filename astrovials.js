@@ -181,7 +181,7 @@ function buildEmbed() {
 }
 
 function start(client) {
-  const minutes = Math.max(1, Number.parseInt(process.env.ASTRO_CHECK_MINUTES ?? '10', 10) || 10);
+  const minutes = Math.max(1, Number.parseInt(process.env.CHECK_MINUTES ?? '10', 10) || 10);
   const run = () => checkAll(client).catch((err) => console.error(`${TAG} ⚠️`, err.message));
   setTimeout(run, 45_000);
   setInterval(run, minutes * 60_000);

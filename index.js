@@ -6,6 +6,7 @@ const hormonas = require('./hormonas');
 const dias = require('./dias');
 const quilombo = require('./quilombo');
 const dado = require('./dado');
+const travestir = require('./travestir');
 
 const NOTIFY_STORES = {
   otokonoko: { mod: otokonoko, name: 'Otokonoko Pharmacy' },
@@ -55,10 +56,13 @@ const commands = [
   new SlashCommandBuilder()
     .setName('dado')
     .setDescription('🎲 ¡Tirá un dado! d3 a d100, personalizado dX o rango al azar'),
+  new SlashCommandBuilder()
+    .setName('travestir')
+    .setDescription('🎭 Da el rol traviatense a todo el servidor (excepto bots)'),
 ].map((command) => command.toJSON());
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 client.once('clientReady', async () => {
@@ -71,6 +75,7 @@ client.once('clientReady', async () => {
   otokonoko.start(client);
   astrovials.start(client);
   hormonas.start(client);
+  travestir.start(client);
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -349,6 +354,28 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'dado') {
     await interaction.reply(dado.buildView());
+  }
+
+  if (interaction.commandName === 'travestir') {
+    if (!interaction.inGuild()) {
+      await interaction.reply({
+        content: 'Este comando solo sirve dentro de un servidor.',
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      const r = await travestir.assignAll(interaction.guild);
+      await interaction.editReply(
+        `🎭 Listo: rol traviatense dado a **${r.added}** miembros (${r.skipped} omitidos, ${r.failed} fallaron).`,
+      );
+    } catch (err) {
+      console.error(`🎭 [travestir] ⚠️ ${err.message}`);
+      await interaction.editReply(
+        'No pude repartir el rol (revisa mis permisos de "gestionar roles" y la jerarquía del rol).',
+      );
+    }
   }
 });
 
