@@ -1,10 +1,16 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const store = require('./store');
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
+} = require("discord.js");
+const store = require("./store");
+const { channels } = require("./config");
 
-const TAG = '💥 [quilombo]';
-const ANNOUNCE_CHANNEL_ID = process.env.QUILOMBO_ANNOUNCE_CHANNEL_ID ?? '1527109090965192774';
-const RESET_ROLES = ['1527108970857234595', '1527108969741422672'];
-const STORE = store.create('quilombo.json', TAG);
+const TAG = "💥 [quilombo]";
+const ANNOUNCE_CHANNEL_ID = channels.quilombo;
+const RESET_ROLES = ["1527108970857234595", "1527108969741422672"];
+const STORE = store.create("quilombo.json", TAG);
 
 let state = { chats: {} };
 
@@ -20,7 +26,6 @@ function saveState() {
 function get(key) {
   const r = state.chats[key];
   if (!r) return null;
-  // migración del formato viejo { date: 'AAAA-MM-DD' } (mediodía UTC, como mostraba <t:D>)
   const iso = r.ts ?? (r.date ? `${r.date}T12:00:00.000Z` : null);
   return iso ? { ts: iso } : null;
 }
@@ -36,23 +41,26 @@ function discordTs(date) {
 
 function fmt(days, hours) {
   const parts = [];
-  if (days) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
-  parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
-  return `**${parts.join(' y ')}**`;
+  if (days) parts.push(`${days} ${days === 1 ? "día" : "días"}`);
+  parts.push(`${hours} ${hours === 1 ? "hora" : "horas"}`);
+  return `**${parts.join(" y ")}**`;
 }
 
 function elapsed(start) {
-  const totalHours = Math.max(0, Math.floor((Date.now() - start.getTime()) / 3_600_000));
+  const totalHours = Math.max(
+    0,
+    Math.floor((Date.now() - start.getTime()) / 3_600_000)
+  );
   return { days: Math.floor(totalHours / 24), hours: totalHours % 24 };
 }
 
 function row() {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId('quilombo:reset')
-      .setLabel('Se armó un quilombo')
-      .setEmoji('💥')
-      .setStyle(ButtonStyle.Danger),
+      .setCustomId("quilombo:reset")
+      .setLabel("Se armó un quilombo")
+      .setEmoji("💥")
+      .setStyle(ButtonStyle.Danger)
   );
 }
 
@@ -66,15 +74,16 @@ function buildView(key) {
   if (!get(key)) {
     set(key);
     return {
-      content: '🕊️ Arranca la cuenta: **0 horas** sin quilombos. Si se arma uno, apretá el botón y la cuenta vuelve a cero.',
-      components: [row()],
+      content:
+        "🕊️ Arranca la cuenta: **0 horas** sin quilombos. Si se arma uno, apretá el botón y la cuenta vuelve a cero.",
+      components: [row()]
     };
   }
   const start = new Date(get(key).ts);
   const { days, hours } = elapsed(start);
   return {
     content: `Llevamos ${fmt(days, hours)} sin quilombos desde el ${discordTs(start)}. Que dure 🕊️`,
-    components: [row()],
+    components: [row()]
   };
 }
 
@@ -90,7 +99,7 @@ function reset(key) {
   const { days, hours } = elapsed(start);
   const view = {
     content: `💥 Uh, se armó un quilombo. La cuenta vuelve a empezar: ${fmt(days, hours)} sin quilombos desde el ${discordTs(start)}. Suerte 🫡`,
-    components: [row()],
+    components: [row()]
   };
   return { view, streak };
 }
@@ -100,11 +109,14 @@ function announce(client, { user, guild, streak }) {
   client.channels
     .fetch(ANNOUNCE_CHANNEL_ID)
     .then((channel) => {
-      if (!channel?.isTextBased()) throw new Error('canal de anuncios inválido');
+      if (!channel?.isTextBased())
+        throw new Error("canal de anuncios inválido");
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
-        .setTitle('💥 Se armó un quilombo')
-        .setDescription(streak ? `Racha perdida: ${streak} sin quilombos 💀` : null);
+        .setTitle("💥 Se armó un quilombo")
+        .setDescription(
+          streak ? `Racha perdida: ${streak} sin quilombos 💀` : null
+        );
       return channel.send({ embeds: [embed] });
     })
     .catch((err) => console.error(`${TAG} ⚠️ anuncio: ${err.message}`));
@@ -112,4 +124,12 @@ function announce(client, { user, guild, streak }) {
 
 loadState();
 
-module.exports = { get, set, buildView, reset, announce, canReset, RESET_ROLES };
+module.exports = {
+  get,
+  set,
+  buildView,
+  reset,
+  announce,
+  canReset,
+  RESET_ROLES
+};

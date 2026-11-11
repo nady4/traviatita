@@ -1,8 +1,10 @@
-const TAG = '🎭 [travestir]';
+const { roles } = require("./config");
 
-const ROLE_TRAVIATENSE = process.env.ROL_TRAVIATENSE ?? '1570037127620853843';
-const ROLE_BOT = process.env.ROL_BOT ?? '1527109023684624475';
-const ROLE_200KG = process.env.ROL_200KG ?? '1527108970857234595';
+const TAG = "🏳️‍⚧️ [travestir]";
+
+const ROLE_TRAVIATENSE = roles.traviatense;
+const ROLE_BOT = roles.bot;
+const ROLE_200KG = roles.admin200kg;
 
 function excluded(member) {
   return member.user.bot || member.roles.cache.has(ROLE_BOT);
@@ -30,7 +32,7 @@ async function assignAll(guild) {
       continue;
     }
     try {
-      await member.roles.add(ROLE_TRAVIATENSE, 'Comando /travestir');
+      await member.roles.add(ROLE_TRAVIATENSE, "Comando /travestir");
       added++;
     } catch (err) {
       failed++;
@@ -38,20 +40,31 @@ async function assignAll(guild) {
     }
   }
 
-  console.log(`${TAG} ✅ ${added} con rol, ${already} ya lo tenían, ${skipped} omitidos, ${failed} fallaron`);
+  console.log(
+    `${TAG} ✅ ${added} con rol, ${already} ya lo tenían, ${skipped} omitidos, ${failed} fallaron`
+  );
   return { total: members.size, added, already, skipped, failed };
 }
 
 function start(client) {
-  client.on('guildMemberAdd', async (member) => {
+  client.on("guildMemberAdd", async (member) => {
     if (excluded(member) || member.roles.cache.has(ROLE_TRAVIATENSE)) return;
     try {
-      await member.roles.add(ROLE_TRAVIATENSE, 'Nuevo miembro del servidor');
+      await member.roles.add(ROLE_TRAVIATENSE, "Nuevo miembro del servidor");
       console.log(`${TAG} ✅ ${member.user.tag} recibió el rol`);
     } catch (err) {
-      console.error(`${TAG} ⚠️ no pude dar el rol a ${member.user.tag}: ${err.message}`);
+      console.error(
+        `${TAG} ⚠️ no pude dar el rol a ${member.user.tag}: ${err.message}`
+      );
     }
   });
 }
 
-module.exports = { ROLE_TRAVIATENSE, ROLE_BOT, ROLE_200KG, canUse, assignAll, start };
+module.exports = {
+  ROLE_TRAVIATENSE,
+  ROLE_BOT,
+  ROLE_200KG,
+  canUse,
+  assignAll,
+  start
+};

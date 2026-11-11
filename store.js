@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const config = require('./config');
 
 // carpeta de estado para hosting con redeploy: los JSON viven fuera del build
 // si hay un mount/volume persistente (ej. STATE_DIR=/data)
 function stateDir() {
-  const env = process.env.STATE_DIR;
+  const env = config.stateDir;
   if (env) {
     fs.mkdirSync(env, { recursive: true });
     return env;

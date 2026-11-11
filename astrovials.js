@@ -1,9 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
 const { create } = require('./store');
+const { roles, channels, stockCheckMinutes } = require('./config');
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 const BASE = 'https://astrovials.com';
-const NOTIFY_ROLE_ID = process.env.ASTRO_NOTIFY_ROLE_ID ?? '1564743677601915051';
+const NOTIFY_ROLE_ID = roles.admin200kg;
 const TAG = '🚀 [astrovials]';
 const STORE = create('astro.json', TAG);
 
@@ -17,12 +18,7 @@ const PRODUCTS = [
 let state = { lastCheck: null, lastChange: null, products: {} };
 let inFlight = null;
 
-function parseMin(raw, fallback) {
-  const n = Number.parseInt(raw ?? '', 10);
-  return Number.isFinite(n) && n >= 0 ? n : fallback;
-}
-
-const STALE_ANNOUNCE_MS = parseMin(process.env.ASTRO_STALE_ANNOUNCE_MIN, 30) * 60_000;
+const STALE_ANNOUNCE_MS = 30 * 60_000;
 
 function fmtAge(ms) {
   if (!Number.isFinite(ms)) return 'tiempo desconocido';
@@ -63,7 +59,7 @@ function priceStr(p) {
 }
 
 async function announceChange(client, slug, label, wasInStock, current) {
-  const channelId = process.env.ASTRO_ANNOUNCE_CHANNEL_ID ?? process.env.OTK_ANNOUNCE_CHANNEL_ID;
+  const channelId = channels.stock;
   if (!channelId || !client) return;
   try {
     const channel = await client.channels.fetch(channelId);
@@ -181,7 +177,7 @@ function buildEmbed() {
 }
 
 function start(client) {
-  const minutes = Math.max(1, Number.parseInt(process.env.CHECK_MINUTES ?? '10', 10) || 10);
+  const minutes = stockCheckMinutes;
   const run = () => checkAll(client).catch((err) => console.error(`${TAG} ⚠️`, err.message));
   setTimeout(run, 45_000);
   setInterval(run, minutes * 60_000);
@@ -191,4 +187,4 @@ function start(client) {
 
 loadState();
 
-module.exports = { PRODUCTS, NOTIFY_ROLE_ID, checkAll, ensureData, buildEmbed, start };
+module.exports = { PRODUCTS, checkAll, ensureData, buildEmbed, start };

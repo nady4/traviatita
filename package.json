@@ -1,14 +1,30 @@
 {
   "name": "traviatita",
   "version": "1.0.0",
-  "description": "Bot base de Discord",
+  "description": "Bot de Discord con recordatorios de hormonas, contador de HRT, seguimiento de stock de estradiol y herramientas de comunidad",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "deploy": "node deploy-commands.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "discord",
+    "discord.js",
+    "bot",
+    "hrt",
+    "estradiol",
+    "stock"
+  ],
+  "author": "nady4 <dev@nady4.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nady4/traviatita.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "discord.js": "^14.27.0",
     "dotenv": "^18.0.9"
