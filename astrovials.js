@@ -1,6 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
 const { create } = require('./store');
 const { roles, channels, stockCheckMinutes } = require('./config');
+const cal = require('./calendario');
+const produccion = require('./produccion');
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 const BASE = 'https://astrovials.com';
@@ -17,18 +19,16 @@ const PRODUCTS = [
 
 let state = { lastCheck: null, lastChange: null, products: {} };
 let inFlight = null;
+let checking = null;
 
 const STALE_ANNOUNCE_MS = 30 * 60_000;
 
-function fmtAge(ms) {
-  if (!Number.isFinite(ms)) return 'tiempo desconocido';
-  const h = Math.floor(ms / 3_600_000);
-  const m = Math.floor((ms % 3_600_000) / 60_000);
-  return h > 0 ? `~${h}h ${m}m` : `~${m}m`;
-}
-
 function loadState() {
   const raw = STORE.load({});
+  if (raw.daily?.date) {
+    produccion.mergeMax('astrovials', raw.daily.date, raw.daily.counts ?? {});
+    console.log(`${TAG} 📦 histórico diario migrado a produccion.json (${raw.daily.date})`);
+  }
   state = {
     lastCheck: raw.lastCheck ?? null,
     lastChange: raw.lastChange ?? null,
@@ -82,6 +82,14 @@ async function announceChange(client, slug, label, wasInStock, current) {
 }
 
 async function checkAll(client) {
+  if (checking) return checking;
+  checking = runCheck(client).finally(() => {
+    checking = null;
+  });
+  return checking;
+}
+
+async function runCheck(client) {
   const badges = [];
   let ok = 0;
   let fails = 0;
@@ -96,6 +104,21 @@ async function checkAll(client) {
       const prevRead = prev ? Date.parse(prev.lastRead ?? state.lastCheck ?? '') : NaN;
       const prevAgeMs = Number.isFinite(prevRead) ? Math.max(0, now.getTime() - prevRead) : Infinity;
       const staleAnnounce = STALE_ANNOUNCE_MS > 0 && changed && prevAgeMs > STALE_ANNOUNCE_MS;
+      const prevStock = !prev
+        ? null
+        : Number.isFinite(prev.stock)
+          ? Math.max(0, prev.stock)
+          : prev.inStock === false
+            ? 0
+            : null;
+      const stockDelta = prevStock !== null && prod.stock > 0 ? prod.stock - prevStock : 0;
+      const restocked = stockDelta > 0 && prevAgeMs <= STALE_ANNOUNCE_MS ? stockDelta : 0;
+
+      if (restocked > 0) {
+        const date = cal.dateKey(now);
+        produccion.add('astrovials', date, p.slug, restocked);
+        console.log(`${TAG} 📦 ${p.label}: +${restocked} viales el ${cal.fmtDate(date)}`);
+      }
 
       state.products[p.slug] = {
         name: prod.name,
@@ -109,7 +132,7 @@ async function checkAll(client) {
       saveState();
       badges.push(inStock ? '🟢' : '🔴');
       if (staleAnnounce) {
-        console.log(`${TAG} 🕓 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} reconciliado tras corte de ${fmtAge(prevAgeMs)} (sin anuncio)`);
+        console.log(`${TAG} 🕓 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} reconciliado tras corte de ${cal.fmtAge(prevAgeMs)} (sin anuncio)`);
       } else if (changed) {
         console.log(`${TAG} 🔔 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} (${priceStr(prod)} · ${prod.stock} u.)`);
         state.lastChange = nowIso;
@@ -160,10 +183,11 @@ function buildEmbed() {
   for (const p of PRODUCTS) {
     const s = state.products[p.slug];
     const lastSeen = !s?.inStock && s?.lastInStock ? ` · Última vez en stock: ${discordTs(s.lastInStock)}` : '';
+    const qty = s?.inStock && Number.isFinite(s.stock) ? ` · ${s.stock} u.` : '';
     embed.addFields({
       name: s ? `${s.inStock ? '🟢' : '🔴'} ${p.label}` : `⏳ ${p.label}`,
       value: s
-        ? `${s.inStock ? 'En stock' : 'Agotado'}${lastSeen}\n[Ver producto](${BASE}/en/shop/${p.slug})`
+        ? `${s.inStock ? `En stock${qty}` : 'Agotado'}${lastSeen}\n[Ver producto](${BASE}/en/shop/${p.slug})`
         : 'Sin datos de stock aún',
     });
   }
@@ -181,7 +205,7 @@ function start(client) {
   const run = () => checkAll(client).catch((err) => console.error(`${TAG} ⚠️`, err.message));
   setTimeout(run, 45_000);
   setInterval(run, minutes * 60_000);
-  const age = state.lastCheck ? `, estado de hace ${fmtAge(Date.now() - Date.parse(state.lastCheck))}` : ', estado vacío (primera lectura al vuelo)';
+  const age = state.lastCheck ? `, estado de hace ${cal.fmtAge(Date.now() - Date.parse(state.lastCheck))}` : ', estado vacío (primera lectura al vuelo)';
   console.log(`${TAG} ✅ rastreo: ${PRODUCTS.length} productos cada ${minutes} min (${BASE.replace('https://', '')})${age}`);
 }
 

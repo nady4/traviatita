@@ -2,11 +2,12 @@ const crypto = require("crypto");
 const { EmbedBuilder } = require("discord.js");
 const { create } = require("./store");
 const { roles, channels, stockCheckMinutes } = require("./config");
+const cal = require("./calendario");
+const produccion = require("./produccion");
 
 const UA =
   "Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0";
 const BASE = "https://otkph.am";
-const STORE_API = `${BASE}/wp-json/wc/store/v1/products`;
 const TAG = "💊 [otokonoko]";
 const STORE = create("stock.json", TAG);
 const ROLE_OTOKONOKO = roles.otokonoko;
@@ -120,11 +121,9 @@ async function authenticate(challengeHtml, challengeUrl) {
   console.log(`${TAG} 🔐 anubis autenticado`);
 }
 
-async function anubisFetch(url) {
+async function anubisFetch(url, accept = "application/json") {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { res, url: finalUrl } = await httpGet(url, {
-      Accept: "application/json"
-    });
+    const { res, url: finalUrl } = await httpGet(url, { Accept: accept });
     const body = await res.text();
     if (!body.includes("anubis_challenge")) {
       return { res, body };
@@ -132,6 +131,51 @@ async function anubisFetch(url) {
     await authenticate(body, finalUrl);
   }
   throw new Error("anubis: sigue mostrando challenge tras re-autenticar");
+}
+
+function decodeEntities(value) {
+  return value
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+}
+
+function parseVariations(html) {
+  const match = html.match(/data-product_variations="([^"]*)"/);
+  if (!match) throw new Error("variaciones no encontradas en la página");
+  const parsed = JSON.parse(decodeEntities(match[1]));
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("variaciones inválidas en la página");
+  }
+  return parsed;
+}
+
+function variationStock(variation) {
+  const html = variation.availability_html ?? "";
+  if (/out of stock/i.test(html)) return 0;
+  const match = html.match(/(\d+)\s+(?:in stock|left in stock)/i);
+  return match ? Number(match[1]) : null;
+}
+
+async function fetchProductStock(slug) {
+  const url = `${BASE}/product/${slug}/`;
+  const { res, body } = await anubisFetch(url, "text/html");
+  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  const variations = parseVariations(body);
+  const quantities = variations
+    .map(variationStock)
+    .filter((n) => n !== null);
+  const stock = quantities.length ? Math.max(...quantities) : 0;
+  const inStock =
+    variations.some((v) => v.is_in_stock === true) || stock > 0;
+  const nameMatch = body.match(
+    /<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>([^<]+)<\/h1>/i
+  );
+  const name = nameMatch ? decodeEntities(nameMatch[1]).trim() : null;
+  return { name, stock, inStock };
 }
 
 async function announceChange(client, slug, label, wasInStock, current) {
@@ -163,15 +207,11 @@ async function checkAll(client) {
   let fails = 0;
   for (const p of PRODUCTS) {
     try {
-      const { res, body } = await anubisFetch(`${STORE_API}?slug=${p.slug}`);
-      if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
-      const data = JSON.parse(body);
-      const prod = Array.isArray(data) ? data[0] : null;
-      if (!prod) throw new Error("producto no encontrado en la API");
+      const prod = await fetchProductStock(p.slug);
 
       const now = new Date();
       const nowIso = now.toISOString();
-      const inStock = prod.is_in_stock === true;
+      const inStock = prod.inStock;
       const prev = state.products[p.slug];
       const changed = !!prev && prev.inStock !== inStock;
       const prevRead = prev
@@ -182,9 +222,29 @@ async function checkAll(client) {
         : Infinity;
       const staleAnnounce =
         STALE_ANNOUNCE_MS > 0 && changed && prevAgeMs > STALE_ANNOUNCE_MS;
+      const prevStock = !prev
+        ? null
+        : Number.isFinite(prev.stock)
+          ? Math.max(0, prev.stock)
+          : prev.inStock === false
+            ? 0
+            : null;
+      const stockDelta =
+        prevStock !== null && prod.stock > 0 ? prod.stock - prevStock : 0;
+      const restocked =
+        stockDelta > 0 && prevAgeMs <= STALE_ANNOUNCE_MS ? stockDelta : 0;
+
+      if (restocked > 0) {
+        const date = cal.dateKey(now);
+        produccion.add("otokonoko", date, p.slug, restocked);
+        console.log(
+          `${TAG} 📦 ${p.label}: +${restocked} viales el ${cal.fmtDate(date)}`
+        );
+      }
 
       state.products[p.slug] = {
-        name: prod.name,
+        name: prod.name ?? prev?.name ?? p.label,
+        stock: prod.stock,
         inStock,
         lastRead: nowIso,
         lastInStock: inStock ? nowIso : (prev?.lastInStock ?? null),
@@ -198,12 +258,12 @@ async function checkAll(client) {
       badges.push(inStock ? "🟢" : "🔴");
       if (staleAnnounce) {
         console.log(
-          `${TAG} 🕓 ${p.label}: ${prev.inStock ? "🟢 → 🔴" : "🔴 → 🟢"} reconciliado tras corte de ${fmtAge(prevAgeMs)} (sin anuncio)`
+          `${TAG} 🕓 ${p.label}: ${prev.inStock ? "🟢 → 🔴" : "🔴 → 🟢"} reconciliado tras corte de ${cal.fmtAge(prevAgeMs)} (sin anuncio)`
         );
       } else if (changed) {
         state.lastChange = nowIso;
         console.log(
-          `${TAG} 🔔 ${p.label}: ${prev.inStock ? "🟢 → 🔴" : "🔴 → 🟢"}`
+          `${TAG} 🔔 ${p.label}: ${prev.inStock ? "🟢 → 🔴" : "🔴 → 🟢"} (${prod.stock} u.)`
         );
         await announceChange(
           client,
@@ -214,7 +274,7 @@ async function checkAll(client) {
         );
       } else if (!prev) {
         console.log(
-          `${TAG} ➕ ${p.label}: ${inStock ? "🟢" : "🔴"} (primera lectura)`
+          `${TAG} ➕ ${p.label}: ${inStock ? "🟢" : "🔴"} (primera lectura · ${prod.stock} u.)`
         );
       }
       ok++;
@@ -265,10 +325,12 @@ function buildEmbed() {
       !s?.inStock && s?.lastInStock
         ? ` · Última vez en stock: ${discordTs(s.lastInStock)}`
         : "";
+    const qty =
+      s?.inStock && Number.isFinite(s.stock) ? ` · ${s.stock} u.` : "";
     embed.addFields({
       name: s ? `${s.inStock ? "🟢" : "🔴"} ${p.label}` : `⏳ ${p.label}`,
       value: s
-        ? `${s.inStock ? "En stock" : "Agotado"}${lastSeen}\n[Ver producto](${BASE}/product/${p.slug}/)`
+        ? `${s.inStock ? `En stock${qty}` : "Agotado"}${lastSeen}\n[Ver producto](${BASE}/product/${p.slug}/)`
         : "Sin datos de stock aún"
     });
   }
@@ -302,5 +364,8 @@ module.exports = {
   checkAll,
   ensureData,
   buildEmbed,
-  start
+  start,
+  parseVariations,
+  variationStock,
+  fetchProductStock
 };

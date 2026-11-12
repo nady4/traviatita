@@ -27,6 +27,16 @@ function positiveInt(name) {
   return value;
 }
 
+function timeZone(name, fallback) {
+  const value = process.env[name] || fallback;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
+  } catch {
+    throw new Error(`${name} debe ser una zona horaria IANA válida`);
+  }
+  return value;
+}
+
 module.exports = {
   token: required("TOKEN"),
   guildId: optionalSnowflake("GUILD_ID"),
@@ -42,5 +52,6 @@ module.exports = {
     stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID")
   },
   stockCheckMinutes: positiveInt("STOCK_CHECK_MINUTES"),
+  stockSummaryTz: timeZone("STOCK_SUMMARY_TZ", "America/Argentina/Buenos_Aires"),
   stateDir: process.env.STATE_DIR || undefined
 };

@@ -58,8 +58,9 @@ npm run dev
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
+| `STOCK_SUMMARY_TZ`             | ➖ No       | Zona horaria IANA para los resúmenes de viales ingresados (diario, semanal y mensual). Por defecto `America/Argentina/Buenos_Aires`. |
 
-`.env` es la fuente de verdad: el código no define valores de reemplazo para estas variables. Las únicas excepciones son `STATE_DIR` y `GUILD_ID`, que al no estar definidas usan el directorio del proyecto y el registro global de comandos respectivamente.
+`.env` es la fuente de verdad: el código no define valores de reemplazo para estas variables. Las únicas excepciones son `STATE_DIR`, `GUILD_ID` y `STOCK_SUMMARY_TZ`, que al no estar definidas usan el directorio del proyecto, el registro global de comandos y `America/Argentina/Buenos_Aires` respectivamente.
 
 La configuración se centraliza en `config.js`, que carga `.env` una sola vez y valida al arrancar que no falte ninguna variable obligatoria, que los roles y canales sean IDs de Discord válidos y que `STOCK_CHECK_MINUTES` sea un entero positivo. Si algo no cumple, el proceso falla con un mensaje indicando la variable problemática.
 
@@ -83,13 +84,21 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 ## 💾 Persistencia
 
-El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `hormonas.json`, `dias.json`, `quilombo.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
 
 <br>
 
 ## 📦 Seguimiento de stock
 
-Los trackers de Otokonoko y Astrovials revisan los productos cada `STOCK_CHECK_MINUTES` minutos y anuncian solo cuando cambia la disponibilidad. Si el estado guardado tiene más de 30 minutos de antigüedad, los cambios detectados se reconcilian sin anunciar para evitar avisos fantasma después de un reinicio o una restauración. Otokonoko además resuelve el desafío proof-of-work de Anubis antes de consultar la API.
+Los trackers de Otokonoko y Astrovials revisan los productos cada `STOCK_CHECK_MINUTES` minutos y anuncian solo cuando cambia la disponibilidad. Si el estado guardado tiene más de 30 minutos de antigüedad, los cambios detectados se reconcilian sin anunciar para evitar avisos fantasma después de un reinicio o una restauración. Otokonoko además resuelve el desafío proof-of-work de Anubis antes de consultar la página de cada producto, de donde extrae la cantidad disponible.
+
+Cada vez que un producto suma unidades, el ingreso se guarda en `produccion.json` con la fecha del día y la cantidad, de modo que el histórico completo queda disponible para análisis. Sobre ese histórico se publican tres resúmenes en el canal de stock, siempre que haya al menos un vial ingresado:
+
+- 🚀 **Diario** (solo Astrovials): al terminar cada día, con el detalle por tipo de vial.
+- 📅 **Semanal** (ambas tiendas): al terminar el domingo, con el total de lunes a domingo.
+- 🗓️ **Mensual** (ambas tiendas): al terminar el mes, con el total del mes calendario.
+
+Los resúmenes usan la zona horaria `STOCK_SUMMARY_TZ` y registran en `resumenes.json` el último período anunciado para no duplicar mensajes. Si el bot estaba apagado cuando correspondía un resumen, al arrancar recupera el último período pendiente.
 
 <br>
 
@@ -110,6 +119,9 @@ events/
 ui/
   stockNotify.js         Botones compartidos de suscripción a stock
 store.js                 Persistencia JSON con escritura atómica
+calendario.js            Helpers de fecha y zona horaria para los resúmenes
+produccion.js            Histórico diario de viales ingresados por tienda y producto
+resumenes.js             Resúmenes diario, semanal y mensual de viales ingresados
 otokonoko.js             Tracker de stock de Otokonoko Pharmacy
 astrovials.js            Tracker de stock de Astrovials
 hormonas.js              Recordatorios de hormonas por DM
