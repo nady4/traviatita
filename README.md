@@ -57,6 +57,7 @@ npm run dev
 | `ROLE_ASTROVIALS_ID`           | ✅ Sí       | Rol que se pinguea en los avisos de stock de Astrovials y al que se suscriben los usuarios.      |
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
+| `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
 | `STOCK_SUMMARY_TZ`             | ➖ No       | Zona horaria IANA para los resúmenes de viales ingresados (diario, semanal y mensual). Por defecto `America/Argentina/Buenos_Aires`. |
 
@@ -71,6 +72,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | Comando              | Descripción                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------- |
 | 💬 `/talk <mensaje>` | El bot repite el mensaje en el canal.                                                                     |
+| 🐦 `/traviatweet <mensaje>` | Repite el mensaje en el canal y envía por DM un link para twittearlo.                              |
 | 💊 `/otokonoko`      | Muestra el stock actual de Otokonoko Pharmacy con botones para suscribirse o desuscribirse de los avisos. |
 | 🚀 `/astrovials`     | Muestra el stock actual de Astrovials con botones para suscribirse o desuscribirse de los avisos.         |
 | 🔔 `/hormonas`       | Configura recordatorios por DM (12 h, 1 día, 36 h, 5 días, 1 sem, 2 sem o 1 mes).                         |

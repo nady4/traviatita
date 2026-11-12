@@ -51,6 +51,7 @@ module.exports = {
     quilombo: snowflake("CHANNEL_ANNOUNCE_QUILOMBO_ID"),
     stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID")
   },
+  tweetUserId: snowflake("TWEET_USER_ID"),
   stockCheckMinutes: positiveInt("STOCK_CHECK_MINUTES"),
   stockSummaryTz: timeZone("STOCK_SUMMARY_TZ", "America/Argentina/Buenos_Aires"),
   stateDir: process.env.STATE_DIR || undefined
