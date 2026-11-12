@@ -229,10 +229,13 @@ async function checkAll(client) {
           : prev.inStock === false
             ? 0
             : null;
-      const stockDelta =
-        prevStock !== null && prod.stock > 0 ? prod.stock - prevStock : 0;
-      const restocked =
-        stockDelta > 0 && prevAgeMs <= STALE_ANNOUNCE_MS ? stockDelta : 0;
+      const stockDelta = prevStock !== null ? prod.stock - prevStock : 0;
+      const fresh = prevAgeMs <= STALE_ANNOUNCE_MS;
+      const restocked = stockDelta > 0 && fresh ? stockDelta : 0;
+      const exited =
+        stockDelta < 0 && fresh && (!prod.inStock || prod.stock > 0)
+          ? -stockDelta
+          : 0;
 
       if (restocked > 0) {
         const date = cal.dateKey(now);
@@ -240,6 +243,38 @@ async function checkAll(client) {
         console.log(
           `${TAG} 📦 ${p.label}: +${restocked} viales el ${cal.fmtDate(date)}`
         );
+      }
+
+      if (exited > 0) {
+        const date = cal.dateKey(now);
+        produccion.addExit("otokonoko", date, p.slug, exited);
+        console.log(
+          `${TAG} 📤 ${p.label}: -${exited} viales el ${cal.fmtDate(date)}`
+        );
+      }
+
+      if (inStock) {
+        produccion.markInStock(
+          "otokonoko",
+          p.slug,
+          nowIso,
+          prev?.inStock ? prev.lastChange : null
+        );
+      } else if (changed && prev?.inStock) {
+        const endIso = staleAnnounce ? (prev.lastRead ?? nowIso) : nowIso;
+        const weekKey = cal.weekEndingSunday(cal.dateKey(new Date(endIso)));
+        const result = produccion.markOutOfStock(
+          "otokonoko",
+          p.slug,
+          endIso,
+          weekKey,
+          prev.lastChange
+        );
+        if (result) {
+          console.log(
+            `${TAG} ⏱️ ${p.label}: en stock ${cal.fmtAge(result.ms)} (promedio semanal ${cal.fmtAge(result.weekAverageMs)})`
+          );
+        }
       }
 
       state.products[p.slug] = {

@@ -68,6 +68,10 @@ function lastCompletedSunday(todayKey = dateKey()) {
   return addDays(todayKey, day === 0 ? -7 : -day);
 }
 
+function weekEndingSunday(key = dateKey()) {
+  return addDays(key, (7 - weekday(key)) % 7);
+}
+
 function weekRange(sundayKey) {
   return { start: addDays(sundayKey, -6), end: sundayKey };
 }
@@ -130,6 +134,7 @@ module.exports = {
   weekday,
   daysBetween,
   lastCompletedSunday,
+  weekEndingSunday,
   weekRange,
   previousMonthKey,
   monthRange,

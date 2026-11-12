@@ -100,6 +100,8 @@ Cada vez que un producto suma unidades, el ingreso se guarda en `produccion.json
 
 Los resúmenes usan la zona horaria `STOCK_SUMMARY_TZ` y registran en `resumenes.json` el último período anunciado para no duplicar mensajes. Si el bot estaba apagado cuando correspondía un resumen, al arrancar recupera el último período pendiente.
 
+Además, `produccion.json` guarda las salidas de stock (`exits`) y la duración de cada período en stock (`inStockSince` y `durations`, con el promedio agrupado por semana). Esta información es solo para análisis interno: no se muestra en Discord.
+
 <br>
 
 ## 🗂️ Estructura
