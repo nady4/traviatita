@@ -137,4 +137,4 @@ travestir.js             Asignación del rol traviatense
 
 <br>
 
-Hecho con 💖 para la mejor owner más linda de Discord
+Hecho con 💖 para la owner más linda de Discord
