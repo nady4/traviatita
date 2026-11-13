@@ -11,7 +11,9 @@ function tweetIntent(text) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("traviatweet")
-    .setDescription("🐦 Traviatita repite el mensaje y te manda un link para twittearlo")
+    .setDescription(
+      "🐦 Traviatita repite el mensaje y te manda un link para twittearlo"
+    )
     .addStringOption((option) =>
       option
         .setName("mensaje")
@@ -26,7 +28,7 @@ module.exports = {
 
     if (mensaje.length > TWEET_LIMIT) {
       await interaction.reply({
-        content: `⚠️ El mensaje tiene ${mensaje.length} caracteres y el máximo es ${TWEET_LIMIT}. No publiqué nada; acortalo para que entre en un tweet.`,
+        content: `⚠️ El mensaje tiene ${mensaje.length} caracteres y el máximo es ${TWEET_LIMIT}, pedazo de mogolicx. Acortalo y volvé a intentarlo.`,
         flags: MessageFlags.Ephemeral
       });
       return;
@@ -38,7 +40,10 @@ module.exports = {
     try {
       message = await interaction.channel.send(mensaje);
     } catch (error) {
-      console.error("🐦 [traviatweet] ⚠️ no pude enviar el mensaje:", error.message);
+      console.error(
+        "🐦 [traviatweet] ⚠️ no pude enviar el mensaje:",
+        error.message
+      );
       await interaction.editReply(
         "No pude enviar tu mensaje (revisa mis permisos en el canal)."
       );
