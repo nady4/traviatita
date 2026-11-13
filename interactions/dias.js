@@ -1,5 +1,5 @@
-const { MessageFlags } = require("discord.js");
 const dias = require("../dias");
+const { replyEphemeral, updateOrReply } = require("../utils/interactions");
 
 module.exports = {
   async modal(interaction) {
@@ -9,12 +9,10 @@ module.exports = {
     const date = dias.parse(raw);
 
     if (!date) {
-      await interaction
-        .reply({
-          content: `Formato inválido \`${raw}\` — usa DD/MM/AAAA (ej. 15/03/2023), sin fechas futuras.`,
-          flags: MessageFlags.Ephemeral
-        })
-        .catch(() => {});
+      await replyEphemeral(
+        interaction,
+        `Formato inválido \`${raw}\` — usa DD/MM/AAAA (ej. 15/03/2023), sin fechas futuras.`
+      );
       return;
     }
 
@@ -24,11 +22,7 @@ module.exports = {
     );
     const view = dias.buildView(interaction.user.id);
     try {
-      if (interaction.isFromMessage()) {
-        await interaction.update(view);
-      } else {
-        await interaction.reply({ flags: MessageFlags.Ephemeral, ...view });
-      }
+      await updateOrReply(interaction, view);
     } catch (err) {
       console.error("⏳ [dias] ⚠️ modal submit:", err.message);
     }

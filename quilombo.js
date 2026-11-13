@@ -6,6 +6,8 @@ const {
 } = require("discord.js");
 const store = require("./store");
 const { channels } = require("./config");
+const { getTextChannel, timestamp } = require("./utils/discord");
+const { hasAnyRole } = require("./utils/permissions");
 
 const TAG = "💥 [quilombo]";
 const ANNOUNCE_CHANNEL_ID = channels.quilombo;
@@ -35,10 +37,6 @@ function set(key, date = new Date()) {
   saveState();
 }
 
-function discordTs(date) {
-  return `<t:${Math.floor(date.getTime() / 1000)}:f>`;
-}
-
 function fmt(days, hours) {
   const parts = [];
   if (days) parts.push(`${days} ${days === 1 ? "día" : "días"}`);
@@ -65,9 +63,7 @@ function row() {
 }
 
 function canReset(interaction) {
-  if (!interaction.inGuild()) return false;
-  const cache = interaction.member?.roles?.cache;
-  return !!cache && RESET_ROLES.some((id) => cache.has(id));
+  return hasAnyRole(interaction, RESET_ROLES);
 }
 
 function buildView(key) {
@@ -82,7 +78,7 @@ function buildView(key) {
   const start = new Date(get(key).ts);
   const { days, hours } = elapsed(start);
   return {
-    content: `Llevamos ${fmt(days, hours)} sin quilombos desde el ${discordTs(start)}. Que dure 🕊️`,
+    content: `Llevamos ${fmt(days, hours)} sin quilombos desde el ${timestamp(start, "f")}. Que dure 🕊️`,
     components: [row()]
   };
 }
@@ -98,28 +94,26 @@ function reset(key) {
   const start = new Date(get(key).ts);
   const { days, hours } = elapsed(start);
   const view = {
-    content: `💥 Uh, se armó un quilombo. La cuenta vuelve a empezar: ${fmt(days, hours)} sin quilombos desde el ${discordTs(start)}. Suerte 🫡`,
+    content: `💥 Uh, se armó un quilombo. La cuenta vuelve a empezar: ${fmt(days, hours)} sin quilombos desde el ${timestamp(start, "f")}. Suerte 🫡`,
     components: [row()]
   };
   return { view, streak };
 }
 
-function announce(client, { user, guild, streak }) {
+async function announce(client, { user, guild, streak }) {
   if (!client) return;
-  client.channels
-    .fetch(ANNOUNCE_CHANNEL_ID)
-    .then((channel) => {
-      if (!channel?.isTextBased())
-        throw new Error("canal de anuncios inválido");
-      const embed = new EmbedBuilder()
-        .setColor(0xe74c3c)
-        .setTitle("💥 Se armó un quilombo")
-        .setDescription(
-          streak ? `Racha perdida: ${streak} sin quilombos 💀` : null
-        );
-      return channel.send({ embeds: [embed] });
-    })
-    .catch((err) => console.error(`${TAG} ⚠️ anuncio: ${err.message}`));
+  try {
+    const channel = await getTextChannel(client, ANNOUNCE_CHANNEL_ID);
+    const embed = new EmbedBuilder()
+      .setColor(0xe74c3c)
+      .setTitle("💥 Se armó un quilombo")
+      .setDescription(
+        streak ? `Racha perdida: ${streak} sin quilombos 💀` : null
+      );
+    await channel.send({ embeds: [embed] });
+  } catch (err) {
+    console.error(`${TAG} ⚠️ anuncio: ${err.message}`);
+  }
 }
 
 loadState();

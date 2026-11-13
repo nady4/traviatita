@@ -1,4 +1,5 @@
 const { roles } = require("./config");
+const { hasRole } = require("./utils/permissions");
 
 const TAG = "🏳️‍⚧️ [travestir]";
 
@@ -11,8 +12,7 @@ function excluded(member) {
 }
 
 function canUse(interaction) {
-  if (!interaction.inGuild()) return false;
-  return !!interaction.member?.roles?.cache?.has(ROLE_200KG);
+  return hasRole(interaction, ROLE_200KG);
 }
 
 async function assignAll(guild) {

@@ -1,4 +1,5 @@
 const { stockSummaryTz } = require('./config');
+const { fmtAge } = require('./utils/time');
 
 const DAY_FMT = new Intl.DateTimeFormat('en-CA', {
   timeZone: stockSummaryTz,
@@ -118,13 +119,6 @@ function fmtWeekRange(start, end) {
 function fmtMonth(monthKey) {
   const [y, m] = monthKey.split('-').map(Number);
   return `${MONTHS[m - 1]} de ${y}`;
-}
-
-function fmtAge(ms) {
-  if (!Number.isFinite(ms)) return 'tiempo desconocido';
-  const h = Math.floor(ms / 3_600_000);
-  const m = Math.floor((ms % 3_600_000) / 60_000);
-  return h > 0 ? `~${h}h ${m}m` : `~${m}m`;
 }
 
 module.exports = {

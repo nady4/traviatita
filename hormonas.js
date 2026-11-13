@@ -1,5 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { create } = require('./store');
+const { timestamp } = require('./utils/discord');
 
 const TAG = '⏰ [hormonas]';
 
@@ -48,10 +49,6 @@ function cancel(userId) {
   return had;
 }
 
-function discordTs(iso) {
-  return `<t:${Math.floor(new Date(iso).getTime() / 1000)}:R>`;
-}
-
 function intervalRows(current, userId) {
   const mk = (key) =>
     new ButtonBuilder()
@@ -78,7 +75,7 @@ function view(userId) {
   if (r) {
     const label = INTERVALS[r.interval]?.label ?? r.interval;
     embed.addFields(
-      { name: '⏰ Activo', value: `${label}\nPróxima toma: ${r.next ? discordTs(r.next) : '—'}` },
+      { name: '⏰ Activo', value: `${label}\nPróxima toma: ${r.next ? timestamp(r.next) : '—'}` },
       { name: '✏️ Cambiar', value: 'Pulsa otro intervalo (queda vencido dentro de ese tiempo)' },
     );
   } else {

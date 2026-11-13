@@ -1,18 +1,15 @@
-const { MessageFlags } = require("discord.js");
 const quilombo = require("../quilombo");
+const { replyEphemeral } = require("../utils/interactions");
 
 module.exports = {
   async button(interaction) {
     if (!interaction.customId.startsWith("quilombo:reset")) return;
 
     if (!quilombo.canReset(interaction)) {
-      await interaction
-        .reply({
-          content:
-            "🚫 No podés reiniciar la cuenta — solo quien tenga uno de los roles autorizados puede reportar el quilombo.",
-          flags: MessageFlags.Ephemeral
-        })
-        .catch(() => {});
+      await replyEphemeral(
+        interaction,
+        "🚫 No podés reiniciar la cuenta — solo quien tenga uno de los roles autorizados puede reportar el quilombo."
+      );
       return;
     }
 
@@ -30,12 +27,7 @@ module.exports = {
       });
     } catch (err) {
       console.error("💥 [quilombo] ⚠️ botón:", err.message);
-      await interaction
-        .reply({
-          content: "No pude reiniciar la cuenta.",
-          flags: MessageFlags.Ephemeral
-        })
-        .catch(() => {});
+      await replyEphemeral(interaction, "No pude reiniciar la cuenta.");
     }
   }
 };

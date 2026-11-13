@@ -1,5 +1,5 @@
-const { MessageFlags } = require("discord.js");
 const dado = require("../dado");
+const { replyEphemeral, updateOrReply } = require("../utils/interactions");
 
 module.exports = {
   async modal(interaction) {
@@ -13,13 +13,10 @@ module.exports = {
           interaction.fields.getTextInputValue("dado:lados")
         );
         if (!sides) {
-          await interaction
-            .reply({
-              content:
-                "Ese número no vale — poné caras enteras entre 2 y 1.000.000.",
-              flags: MessageFlags.Ephemeral
-            })
-            .catch(() => {});
+          await replyEphemeral(
+            interaction,
+            "Ese número no vale — poné caras enteras entre 2 y 1.000.000."
+          );
           return;
         }
         r = dado.resultStandard(sides);
@@ -29,13 +26,10 @@ module.exports = {
           interaction.fields.getTextInputValue("dado:max")
         );
         if (!range) {
-          await interaction
-            .reply({
-              content:
-                "Ese rango no vale — poné dos enteros (hasta ±1 billón) con mínimo ≤ máximo.",
-              flags: MessageFlags.Ephemeral
-            })
-            .catch(() => {});
+          await replyEphemeral(
+            interaction,
+            "Ese rango no vale — poné dos enteros (hasta ±1 billón) con mínimo ≤ máximo."
+          );
           return;
         }
         r = dado.resultRange(range.min, range.max);
@@ -45,11 +39,7 @@ module.exports = {
 
       const view = dado.buildView(interaction.user.id, r);
       try {
-        if (interaction.isFromMessage()) {
-          await interaction.update(view);
-        } else {
-          await interaction.reply({ flags: MessageFlags.Ephemeral, ...view });
-        }
+        await updateOrReply(interaction, view);
       } finally {
         console.log(
           `🎲 [${new Date().toISOString()}] ${interaction.user.tag}: tirada ${r.name} → ${r.value}`
@@ -57,12 +47,7 @@ module.exports = {
       }
     } catch (err) {
       console.error("🎲 [dado] ⚠️ modal submit:", err.message);
-      await interaction
-        .reply({
-          content: "No pude registrar la tirada.",
-          flags: MessageFlags.Ephemeral
-        })
-        .catch(() => {});
+      await replyEphemeral(interaction, "No pude registrar la tirada.");
     }
   },
 
@@ -91,12 +76,7 @@ module.exports = {
         );
       } catch (err) {
         console.error("🎲 [dado] ⚠️ botón:", err.message);
-        await interaction
-          .reply({
-            content: "No pude registrar la tirada.",
-            flags: MessageFlags.Ephemeral
-          })
-          .catch(() => {});
+        await replyEphemeral(interaction, "No pude registrar la tirada.");
       }
     }
   }

@@ -3,8 +3,10 @@ const { create } = require('./store');
 const { roles, channels, stockCheckMinutes } = require('./config');
 const cal = require('./calendario');
 const produccion = require('./produccion');
+const { USER_AGENT, fetchText } = require('./utils/http');
+const { sleep, singleFlight } = require('./utils/async');
+const { timestamp, announceStockChange } = require('./utils/discord');
 
-const UA = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 const BASE = 'https://astrovials.com';
 const NOTIFY_ROLE_ID = roles.astrovials;
 const TAG = '🚀 [astrovials]';
@@ -18,8 +20,6 @@ const PRODUCTS = [
 ];
 
 let state = { lastCheck: null, lastChange: null, products: {} };
-let inFlight = null;
-let checking = null;
 
 const STALE_ANNOUNCE_MS = 30 * 60_000;
 
@@ -42,9 +42,11 @@ function saveState() {
 
 async function fetchProductPage(slug) {
   const url = `${BASE}/en/shop/${slug}`;
-  const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'text/html' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const body = (await res.text()).replace(/\\"/g, '"');
+  const body = (
+    await fetchText(url, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'text/html' },
+    })
+  ).replace(/\\"/g, '"');
   const re = /"productId":"[\da-f-]+","slug":"([\w-]+)","name":"([^"]+)","priceCents":(\d+),"currency":"([A-Z]+)","stock":(-?\d+)/g;
   for (const m of body.matchAll(re)) {
     if (m[1] === slug) {
@@ -56,37 +58,6 @@ async function fetchProductPage(slug) {
 
 function priceStr(p) {
   return `${p.priceCents / 100} ${p.currency}`;
-}
-
-async function announceChange(client, slug, label, wasInStock, current) {
-  const channelId = channels.stock;
-  if (!channelId || !client) return;
-  try {
-    const channel = await client.channels.fetch(channelId);
-    if (!channel?.isTextBased()) throw new Error('canal de anuncios inválido');
-    const embed = new EmbedBuilder()
-      .setColor(current.inStock ? 0x2ecc71 : 0xe74c3c)
-      .setTitle('Astrovials')
-      .setURL(`${BASE}/en/shop/${slug}`)
-      .setDescription(
-        `**${label}**: ${wasInStock ? '🟢 en stock' : '🔴 agotado'} → ${current.inStock ? '🟢 **en stock**' : '🔴 **agotado**'}`,
-      );
-    await channel.send({
-      content: `<@&${NOTIFY_ROLE_ID}>`,
-      embeds: [embed],
-      allowedMentions: { roles: [NOTIFY_ROLE_ID] },
-    });
-  } catch (err) {
-    console.error(`${TAG} ⚠️ no pude anunciar:`, err.message);
-  }
-}
-
-async function checkAll(client) {
-  if (checking) return checking;
-  checking = runCheck(client).finally(() => {
-    checking = null;
-  });
-  return checking;
 }
 
 async function runCheck(client) {
@@ -157,7 +128,17 @@ async function runCheck(client) {
       } else if (changed) {
         console.log(`${TAG} 🔔 ${p.label}: ${prev.inStock ? '🟢 → 🔴' : '🔴 → 🟢'} (${priceStr(prod)} · ${prod.stock} u.)`);
         state.lastChange = nowIso;
-        await announceChange(client, p.slug, p.label, prev.inStock, state.products[p.slug]);
+        await announceStockChange({
+          client,
+          channelId: channels.stock,
+          roleId: NOTIFY_ROLE_ID,
+          title: 'Astrovials',
+          url: `${BASE}/en/shop/${p.slug}`,
+          label: p.label,
+          wasInStock: prev.inStock,
+          inStock: state.products[p.slug].inStock,
+          tag: TAG,
+        });
       } else if (!prev) {
         console.log(`${TAG} ➕ ${p.label}: ${inStock ? '🟢' : '🔴'} (primera lectura) · ${priceStr(prod)}`);
       }
@@ -167,7 +148,7 @@ async function runCheck(client) {
       badges.push('⚠️');
       console.error(`${TAG} ⚠️ ${p.slug}: ${err.message}`);
     }
-    await new Promise((r) => setTimeout(r, 2000));
+    await sleep(2000);
   }
   if (ok > 0) {
     state.lastCheck = new Date().toISOString();
@@ -176,23 +157,16 @@ async function runCheck(client) {
   console.log(`${TAG} 📋 ${badges.join('')} (${ok}/${PRODUCTS.length}${fails ? `, ${fails} fallas` : ''})`);
 }
 
+const checkAll = singleFlight(runCheck);
+
 function hasData() {
   return PRODUCTS.every((p) => state.products[p.slug]);
 }
 
-async function ensureData(client) {
+const ensureData = singleFlight(async (client) => {
   if (hasData()) return;
-  if (!inFlight) {
-    inFlight = checkAll(client).finally(() => {
-      inFlight = null;
-    });
-  }
-  await inFlight;
-}
-
-function discordTs(iso) {
-  return `<t:${Math.floor(new Date(iso).getTime() / 1000)}:R>`;
-}
+  await checkAll(client);
+});
 
 function buildEmbed() {
   const anyInStock = PRODUCTS.some((p) => state.products[p.slug]?.inStock);
@@ -203,7 +177,7 @@ function buildEmbed() {
 
   for (const p of PRODUCTS) {
     const s = state.products[p.slug];
-    const lastSeen = !s?.inStock && s?.lastInStock ? ` · Última vez en stock: ${discordTs(s.lastInStock)}` : '';
+    const lastSeen = !s?.inStock && s?.lastInStock ? ` · Última vez en stock: ${timestamp(s.lastInStock)}` : '';
     const qty = s?.inStock && Number.isFinite(s.stock) ? ` · ${s.stock} u.` : '';
     embed.addFields({
       name: s ? `${s.inStock ? '🟢' : '🔴'} ${p.label}` : `⏳ ${p.label}`,
@@ -215,7 +189,7 @@ function buildEmbed() {
 
   embed.addFields({
     name: 'Last check / Last change',
-    value: `Check: ${state.lastCheck ? discordTs(state.lastCheck) : 'nunca'}\nCambio: ${state.lastChange ? discordTs(state.lastChange) : 'sin cambios registrados'}`,
+    value: `Check: ${state.lastCheck ? timestamp(state.lastCheck) : 'nunca'}\nCambio: ${state.lastChange ? timestamp(state.lastChange) : 'sin cambios registrados'}`,
   });
 
   return embed;

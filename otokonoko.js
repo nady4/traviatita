@@ -4,9 +4,12 @@ const { create } = require("./store");
 const { roles, channels, stockCheckMinutes } = require("./config");
 const cal = require("./calendario");
 const produccion = require("./produccion");
+const { USER_AGENT } = require("./utils/http");
+const { fmtAge } = require("./utils/time");
+const { decodeEntities } = require("./utils/html");
+const { sleep, singleFlight } = require("./utils/async");
+const { timestamp, announceStockChange } = require("./utils/discord");
 
-const UA =
-  "Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0";
 const BASE = "https://otkph.am";
 const TAG = "💊 [otokonoko]";
 const STORE = create("stock.json", TAG);
@@ -18,16 +21,8 @@ const PRODUCTS = [
 ];
 
 let state = { jar: {}, lastCheck: null, lastChange: null, products: {} };
-let inFlight = null;
 
 const STALE_ANNOUNCE_MS = 30 * 60_000;
-
-function fmtAge(ms) {
-  if (!Number.isFinite(ms)) return "tiempo desconocido";
-  const h = Math.floor(ms / 3_600_000);
-  const m = Math.floor((ms % 3_600_000) / 60_000);
-  return h > 0 ? `~${h}h ${m}m` : `~${m}m`;
-}
 
 function loadState() {
   const raw = STORE.load({});
@@ -61,7 +56,7 @@ function eatCookies(res) {
 
 async function httpGet(url, headers = {}, depth = 0) {
   const res = await fetch(url, {
-    headers: { "User-Agent": UA, Cookie: cookieHeader(), ...headers },
+    headers: { "User-Agent": USER_AGENT, Cookie: cookieHeader(), ...headers },
     redirect: "manual"
   });
   eatCookies(res);
@@ -107,7 +102,7 @@ async function authenticate(challengeHtml, challengeUrl) {
     `&redir=${encodeURIComponent(BASE + "/")}&elapsedTime=${elapsedTime}`;
   const res = await fetch(passUrl, {
     headers: {
-      "User-Agent": UA,
+      "User-Agent": USER_AGENT,
       Cookie: cookieHeader(),
       Referer: challengeUrl
     },
@@ -131,16 +126,6 @@ async function anubisFetch(url, accept = "application/json") {
     await authenticate(body, finalUrl);
   }
   throw new Error("anubis: sigue mostrando challenge tras re-autenticar");
-}
-
-function decodeEntities(value) {
-  return value
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&");
 }
 
 function parseVariations(html) {
@@ -178,30 +163,7 @@ async function fetchProductStock(slug) {
   return { name, stock, inStock };
 }
 
-async function announceChange(client, slug, label, wasInStock, current) {
-  const channelId = channels.stock;
-  if (!channelId || !client) return;
-  try {
-    const channel = await client.channels.fetch(channelId);
-    if (!channel?.isTextBased()) throw new Error("canal de anuncios inválido");
-    const embed = new EmbedBuilder()
-      .setColor(current.inStock ? 0x2ecc71 : 0xe74c3c)
-      .setTitle("Otokonoko Pharmacy")
-      .setURL(`${BASE}/product/${slug}/`)
-      .setDescription(
-        `**${label}**: ${wasInStock ? "🟢 en stock" : "🔴 agotado"} → ${current.inStock ? "🟢 **en stock**" : "🔴 **agotado**"}`
-      );
-    await channel.send({
-      content: `<@&${ROLE_OTOKONOKO}>`,
-      embeds: [embed],
-      allowedMentions: { roles: [ROLE_OTOKONOKO] }
-    });
-  } catch (err) {
-    console.error(`${TAG} ⚠️ no pude anunciar:`, err.message);
-  }
-}
-
-async function checkAll(client) {
+async function runCheck(client) {
   const badges = [];
   let ok = 0;
   let fails = 0;
@@ -300,13 +262,17 @@ async function checkAll(client) {
         console.log(
           `${TAG} 🔔 ${p.label}: ${prev.inStock ? "🟢 → 🔴" : "🔴 → 🟢"} (${prod.stock} u.)`
         );
-        await announceChange(
+        await announceStockChange({
           client,
-          p.slug,
-          p.label,
-          prev.inStock,
-          state.products[p.slug]
-        );
+          channelId: channels.stock,
+          roleId: ROLE_OTOKONOKO,
+          title: "Otokonoko Pharmacy",
+          url: `${BASE}/product/${p.slug}/`,
+          label: p.label,
+          wasInStock: prev.inStock,
+          inStock: state.products[p.slug].inStock,
+          tag: TAG
+        });
       } else if (!prev) {
         console.log(
           `${TAG} ➕ ${p.label}: ${inStock ? "🟢" : "🔴"} (primera lectura · ${prod.stock} u.)`
@@ -318,7 +284,7 @@ async function checkAll(client) {
       badges.push("⚠️");
       console.error(`${TAG} ⚠️ ${p.slug}: ${err.message}`);
     }
-    await new Promise((r) => setTimeout(r, 2000));
+    await sleep(2000);
   }
   if (ok > 0) {
     state.lastCheck = new Date().toISOString();
@@ -329,23 +295,16 @@ async function checkAll(client) {
   );
 }
 
+const checkAll = singleFlight(runCheck);
+
 function hasData() {
   return PRODUCTS.every((p) => state.products[p.slug]);
 }
 
-async function ensureData(client) {
+const ensureData = singleFlight(async (client) => {
   if (hasData()) return;
-  if (!inFlight) {
-    inFlight = checkAll(client).finally(() => {
-      inFlight = null;
-    });
-  }
-  await inFlight;
-}
-
-function discordTs(iso) {
-  return `<t:${Math.floor(new Date(iso).getTime() / 1000)}:R>`;
-}
+  await checkAll(client);
+});
 
 function buildEmbed() {
   const anyInStock = PRODUCTS.some((p) => state.products[p.slug]?.inStock);
@@ -358,7 +317,7 @@ function buildEmbed() {
     const s = state.products[p.slug];
     const lastSeen =
       !s?.inStock && s?.lastInStock
-        ? ` · Última vez en stock: ${discordTs(s.lastInStock)}`
+        ? ` · Última vez en stock: ${timestamp(s.lastInStock)}`
         : "";
     const qty =
       s?.inStock && Number.isFinite(s.stock) ? ` · ${s.stock} u.` : "";
@@ -372,7 +331,7 @@ function buildEmbed() {
 
   embed.addFields({
     name: "Last check / Last change",
-    value: `Check: ${state.lastCheck ? discordTs(state.lastCheck) : "nunca"}\nCambio: ${state.lastChange ? discordTs(state.lastChange) : "sin cambios registrados"}`
+    value: `Check: ${state.lastCheck ? timestamp(state.lastCheck) : "nunca"}\nCambio: ${state.lastChange ? timestamp(state.lastChange) : "sin cambios registrados"}`
   });
 
   return embed;

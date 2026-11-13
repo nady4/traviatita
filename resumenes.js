@@ -5,6 +5,8 @@ const cal = require('./calendario');
 const produccion = require('./produccion');
 const { PRODUCTS: ASTROVIALS_PRODUCTS } = require('./astrovials');
 const { PRODUCTS: OTOKONOKO_PRODUCTS } = require('./otokonoko');
+const { singleFlight } = require('./utils/async');
+const { sendToChannel } = require('./utils/discord');
 
 const TAG = '📊 [resumenes]';
 const ASTROVIALS_URL = 'https://astrovials.com/en/shop';
@@ -50,9 +52,7 @@ async function sendEmbed(client, embed, label) {
   const channelId = channels.stock;
   if (!channelId || !client) return false;
   try {
-    const channel = await client.channels.fetch(channelId);
-    if (!channel?.isTextBased()) throw new Error('canal de anuncios inválido');
-    await channel.send({ embeds: [embed] });
+    await sendToChannel(client, channelId, { embeds: [embed] });
     return true;
   } catch (err) {
     console.error(`${TAG} ⚠️ no pude anunciar ${label}:`, err.message);
@@ -145,15 +145,7 @@ async function runSummariesOnce(client, now) {
   }
 }
 
-let running = null;
-
-function runSummaries(client, now = new Date()) {
-  if (running) return running;
-  running = runSummariesOnce(client, now).finally(() => {
-    running = null;
-  });
-  return running;
-}
+const runSummaries = singleFlight(runSummariesOnce);
 
 function schedule(client) {
   const delay = cal.msUntilNextMidnight() + 1000;

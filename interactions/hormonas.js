@@ -1,5 +1,5 @@
-const { MessageFlags } = require("discord.js");
 const hormonas = require("../hormonas");
+const { replyEphemeral } = require("../utils/interactions");
 
 module.exports = {
   async button(interaction) {
@@ -21,12 +21,7 @@ module.exports = {
       await interaction.update(hormonas.view(interaction.user.id));
     } catch (err) {
       console.error("⏰ [hormonas] ⚠️ botón:", err.message);
-      await interaction
-        .reply({
-          content: "Error gestionando el recordatorio.",
-          flags: MessageFlags.Ephemeral
-        })
-        .catch(() => {});
+      await replyEphemeral(interaction, "Error gestionando el recordatorio.");
     }
   }
 };

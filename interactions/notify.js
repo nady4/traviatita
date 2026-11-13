@@ -1,5 +1,5 @@
-const { MessageFlags } = require("discord.js");
 const { NOTIFY_STORES } = require("../ui/stockNotify");
+const { replyEphemeral } = require("../utils/interactions");
 
 module.exports = {
   async button(interaction) {
@@ -15,38 +15,35 @@ module.exports = {
 
       if (mode === "on") {
         if (subscribed) {
-          await interaction.reply({
-            content: `🔔 Ya estabas suscritx — te seguiré pingheando con los cambios de **${store.name}**.`,
-            flags: MessageFlags.Ephemeral
-          });
+          await replyEphemeral(
+            interaction,
+            `🔔 Ya estabas suscritx — te seguiré pingheando con los cambios de **${store.name}**.`
+          );
         } else {
           await member.roles.add(roleId, "Alertas de stock: suscripción");
-          await interaction.reply({
-            content: `🔔 Listo — te pingearé cuando cambie el stock de **${store.name}**.`,
-            flags: MessageFlags.Ephemeral
-          });
+          await replyEphemeral(
+            interaction,
+            `🔔 Listo — te pingearé cuando cambie el stock de **${store.name}**.`
+          );
         }
       } else if (!subscribed) {
-        await interaction.reply({
-          content: `🔕 No estabas suscritx — no recibirás ping de **${store.name}**.`,
-          flags: MessageFlags.Ephemeral
-        });
+        await replyEphemeral(
+          interaction,
+          `🔕 No estabas suscritx — no recibirás ping de **${store.name}**.`
+        );
       } else {
         await member.roles.remove(roleId, "Alertas de stock: desuscripción");
-        await interaction.reply({
-          content: `🔕 Desuscripción confirmada — no recibirás más ping de **${store.name}**.`,
-          flags: MessageFlags.Ephemeral
-        });
+        await replyEphemeral(
+          interaction,
+          `🔕 Desuscripción confirmada — no recibirás más ping de **${store.name}**.`
+        );
       }
     } catch (err) {
       console.error(`⚠️ [suscripción] ${interaction.customId}:`, err.message);
-      await interaction
-        .reply({
-          content:
-            'No pude gestionar tu suscripción (revisa mis permisos de "gestionar roles" y la jerarquía del rol).',
-          flags: MessageFlags.Ephemeral
-        })
-        .catch(() => {});
+      await replyEphemeral(
+        interaction,
+        'No pude gestionar tu suscripción (revisa mis permisos de "gestionar roles" y la jerarquía del rol).'
+      );
     }
   }
 };

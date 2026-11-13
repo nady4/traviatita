@@ -1,5 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { create } = require('./store');
+const { stableDayTimestamp } = require('./utils/discord');
 
 const STORE = create('dias.json', '⏳ [dias]');
 
@@ -77,12 +78,6 @@ function fmtDuration({ y, mo, d }) {
   return `${first}${parts.length ? '' : ''}${parts.length ? ', ' + parts.join(', ') + ' y ' : ' y '}${last}`;
 }
 
-// mediodía UTC: <t:D> muestra el mismo día calendario en cualquier huso hasta ±11 h
-function stableTs(date) {
-  const noon = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
-  return `<t:${Math.floor(noon / 1000)}:D>`;
-}
-
 function buildView(userId) {
   const r = get(userId);
   if (!r) {
@@ -94,7 +89,7 @@ function buildView(userId) {
   const start = new Date(`${r.date}T00:00:00.000Z`);
   const b = breakdown(start);
   return {
-    content: `Llevás **${fmtDuration(b)}** con tus hormonas (${b.totalDays} ${b.totalDays === 1 ? 'día' : 'días'}), desde el ${stableTs(start)}`,
+    content: `Llevás **${fmtDuration(b)}** con tus hormonas (${b.totalDays} ${b.totalDays === 1 ? 'día' : 'días'}), desde el ${stableDayTimestamp(start)}`,
     components: [viewRow()],
   };
 }

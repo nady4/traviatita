@@ -131,6 +131,14 @@ events/
   interactionCreate.js   Router de interacciones y manejo central de errores
 ui/
   stockNotify.js         Botones compartidos de suscripción a stock
+utils/
+  async.js               sleep y singleFlight para tareas concurrentes
+  discord.js             Timestamps, canales y anuncios compartidos
+  html.js                Decodificación de entidades y HTML a texto
+  http.js                User-Agent y fetch con timeout
+  interactions.js        Respuestas efímeras y update/reply
+  permissions.js         Chequeo de roles del miembro
+  time.js                Formato de duraciones
 store.js                 Persistencia JSON con escritura atómica
 calendario.js            Helpers de fecha y zona horaria para los resúmenes
 produccion.js            Histórico diario de viales ingresados por tienda y producto
