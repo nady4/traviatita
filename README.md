@@ -58,12 +58,13 @@ npm run dev
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
 | `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
+| `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
 | `STOCK_SUMMARY_TZ`             | ➖ No       | Zona horaria IANA para los resúmenes de viales ingresados (diario, semanal y mensual). Por defecto `America/Argentina/Buenos_Aires`. |
 
 `.env` es la fuente de verdad: el código no define valores de reemplazo para estas variables. Las únicas excepciones son `STATE_DIR`, `GUILD_ID` y `STOCK_SUMMARY_TZ`, que al no estar definidas usan el directorio del proyecto, el registro global de comandos y `America/Argentina/Buenos_Aires` respectivamente.
 
-La configuración se centraliza en `config.js`, que carga `.env` una sola vez y valida al arrancar que no falte ninguna variable obligatoria, que los roles y canales sean IDs de Discord válidos y que `STOCK_CHECK_MINUTES` sea un entero positivo. Si algo no cumple, el proceso falla con un mensaje indicando la variable problemática.
+La configuración se centraliza en `config.js`, que carga `.env` una sola vez y valida al arrancar que no falte ninguna variable obligatoria, que los roles, canales y usuarios sean IDs de Discord válidos y que `STOCK_CHECK_MINUTES` y `TWEET_CHECK_MINUTES` sean enteros positivos. Si algo no cumple, el proceso falla con un mensaje indicando la variable problemática.
 
 <br>
 
@@ -72,7 +73,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | Comando              | Descripción                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------- |
 | 💬 `/talk <mensaje>` | El bot repite el mensaje en el canal.                                                                     |
-| 🐦 `/traviatweet <mensaje>` | Repite el mensaje en el canal y envía por DM un link para twittearlo.                              |
+| 🐦 `/traviatweet <mensaje>` | Repite el mensaje en el canal, envía por DM un link para twittearlo y responde con el link cuando se publica. |
 | 💊 `/otokonoko`      | Muestra el stock actual de Otokonoko Pharmacy con botones para suscribirse o desuscribirse de los avisos. |
 | 🚀 `/astrovials`     | Muestra el stock actual de Astrovials con botones para suscribirse o desuscribirse de los avisos.         |
 | 🔔 `/hormonas`       | Configura recordatorios por DM (12 h, 1 día, 36 h, 5 días, 1 sem, 2 sem o 1 mes).                         |
@@ -84,9 +85,17 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 <br>
 
+## 🐦 Publicaciones en X
+
+`/traviatweet` envía por DM al usuario `TWEET_USER_ID` un link de X con el texto precargado. Mientras haya mensajes pendientes, Traviatita revisa `x.com/traviatitatan` cada `TWEET_CHECK_MINUTES` minutos y, cuando encuentra un tweet con el mismo texto, responde al mensaje del canal con el link y menciona a quien usó el comando.
+
+La detección se hace leyendo el HTML público del perfil, sin API key. Si el texto se edita antes de publicar, o si X bloquea la consulta, no hay respuesta automática; los pendientes vencen a los 7 días. Un tweet debe coincidir exactamente con el mensaje (ignorando espacios extra) y haber sido publicado después del comando.
+
+<br>
+
 ## 💾 Persistencia
 
-El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
 
 <br>
 
@@ -133,6 +142,7 @@ dias.js                  Contador de días de HRT
 quilombo.js              Contador de días sin quilombos
 dado.js                  Tiradas de dados
 travestir.js             Asignación del rol traviatense
+tweets.js                Detección de tweets publicados y respuesta en el canal
 ```
 
 ---

@@ -4,6 +4,7 @@ const astrovials = require("../astrovials");
 const resumenes = require("../resumenes");
 const hormonas = require("../hormonas");
 const travestir = require("../travestir");
+const tweets = require("../tweets");
 
 module.exports = {
   name: Events.ClientReady,
@@ -16,5 +17,6 @@ module.exports = {
     resumenes.start(client);
     hormonas.start(client);
     travestir.start(client);
+    tweets.start(client);
   }
 };

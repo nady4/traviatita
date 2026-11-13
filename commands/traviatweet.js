@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const config = require("../config");
+const tweets = require("../tweets");
 
 const TWEET_LIMIT = 280;
 
@@ -23,8 +24,9 @@ module.exports = {
     const mensaje = interaction.options.getString("mensaje");
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+    let message;
     try {
-      await interaction.channel.send(mensaje);
+      message = await interaction.channel.send(mensaje);
     } catch (error) {
       console.error("🐦 [traviatweet] ⚠️ no pude enviar el mensaje:", error.message);
       await interaction.editReply(
@@ -38,14 +40,32 @@ module.exports = {
       await user.send(
         `🗣️ ${mensaje}\n\n🐦 Twittealo acá: ${tweetIntent(mensaje)}`
       );
+    } catch (error) {
+      console.error("🐦 [traviatweet] ⚠️ no pude enviar el DM:", error.message);
+      await interaction.editReply(
+        "El mensaje se publicó en el canal, pero no pude enviar el link por DM (¿los DMs están abiertos?)."
+      );
+      return;
+    }
+
+    try {
+      tweets.track({
+        messageId: message.id,
+        channelId: message.channelId,
+        authorId: interaction.user.id,
+        text: mensaje
+      });
       await interaction.deleteReply();
       console.log(
         `🐦 [${new Date().toISOString()}] Mensaje de ${interaction.user.tag} en #${interaction.channel.name} enviado por DM a ${config.tweetUserId}`
       );
     } catch (error) {
-      console.error("🐦 [traviatweet] ⚠️ no pude enviar el DM:", error.message);
+      console.error(
+        "🐦 [traviatweet] ⚠️ no pude registrar el tweet pendiente:",
+        error.message
+      );
       await interaction.editReply(
-        "El mensaje se publicó en el canal, pero no pude enviar el link por DM (¿los DMs están abiertos?)."
+        "El mensaje y el DM se enviaron, pero no pude registrar el tweet para avisarte cuando se publique."
       );
     }
   }
