@@ -2,7 +2,7 @@ const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const config = require("../config");
 const tweets = require("../tweets");
 
-const TWEET_LIMIT = 280;
+const TWEET_LIMIT = 260;
 
 function tweetIntent(text) {
   return `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
