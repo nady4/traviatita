@@ -87,7 +87,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 ## 🐦 Publicaciones en X
 
-`/traviatweet` envía por DM al usuario `TWEET_USER_ID` un link de X con el texto precargado. Mientras haya mensajes pendientes, Traviatita revisa `x.com/traviatitatan` cada `TWEET_CHECK_MINUTES` minutos y, cuando encuentra un tweet con el mismo texto, responde al mensaje del canal con el link y menciona a quien usó el comando.
+`/traviatweet` envía por DM al usuario `TWEET_USER_ID` un link de X con el texto precargado. Si el mensaje supera los 260 caracteres, el bot responde con un error efímero y no publica nada. Mientras haya mensajes pendientes, Traviatita revisa `x.com/traviatitatan` cada `TWEET_CHECK_MINUTES` minutos y, cuando encuentra un tweet con el mismo texto, responde al mensaje del canal con el link y menciona a quien usó el comando.
 
 La detección se hace leyendo el HTML público del perfil, sin API key. Si el texto se edita antes de publicar, o si X bloquea la consulta, no hay respuesta automática; los pendientes vencen a los 7 días. Un tweet debe coincidir exactamente con el mensaje (ignorando espacios extra) y haber sido publicado después del comando.
 

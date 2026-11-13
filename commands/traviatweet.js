@@ -15,13 +15,23 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("mensaje")
-        .setDescription("Lo que quieras que Traviatita diga y twittee")
+        .setDescription(
+          `Lo que quieras que Traviatita diga y twittee (máx. ${TWEET_LIMIT} caracteres)`
+        )
         .setRequired(true)
-        .setMaxLength(TWEET_LIMIT)
     ),
 
   async execute(interaction) {
     const mensaje = interaction.options.getString("mensaje");
+
+    if (mensaje.length > TWEET_LIMIT) {
+      await interaction.reply({
+        content: `⚠️ El mensaje tiene ${mensaje.length} caracteres y el máximo es ${TWEET_LIMIT}. No publiqué nada; acortalo para que entre en un tweet.`,
+        flags: MessageFlags.Ephemeral
+      });
+      return;
+    }
+
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     let message;
