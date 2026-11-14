@@ -6,6 +6,7 @@ const hormonas = require("../hormonas");
 const miembros = require("../miembros");
 const travestir = require("../travestir");
 const verificar = require("../verificar");
+const verificaciones = require("../verificaciones");
 const tweets = require("../tweets");
 
 module.exports = {
@@ -21,6 +22,7 @@ module.exports = {
     miembros.start(client);
     travestir.start(client);
     verificar.start(client);
+    verificaciones.start(client);
     tweets.start(client);
   }
 };

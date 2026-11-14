@@ -6,4 +6,6 @@ hormonas.json
 quilombo.json
 tweets.json
 miembros.json
+verificaciones.json
+verificaciones-log.json
 *.json.tmp

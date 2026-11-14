@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const verificar = require("../verificar");
+const verificaciones = require("../verificaciones");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -70,6 +71,14 @@ module.exports = {
       );
       return;
     }
+
+    verificaciones.logVerification({
+      action: "accepted",
+      method: "command",
+      actor: interaction.user,
+      target: member.user,
+      channelId: interaction.channelId
+    });
 
     try {
       await verificar.announce(interaction.client, member);

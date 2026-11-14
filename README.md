@@ -8,7 +8,7 @@ Bot de Discord para el servidor de <a href="https://discord.gg/zVAC3NBz43">Opera
 
 - 🟢 **Node.js 18** o superior.
 - 🤖 Un bot de Discord con los intents **Guilds** y **GuildMembers** habilitados.
-- 🛡️ Permisos de **Gestionar roles**, **Enviar mensajes** e **Insertar enlaces** en los canales de anuncios.
+- 🛡️ Permisos de **Gestionar roles**, **Gestionar canales**, **Enviar mensajes**, **Insertar enlaces** y **Leer historial de mensajes** en los canales de anuncios.
 - 🔺 El rol del bot debe estar por encima de los roles que asigna.
 
 <br>
@@ -54,7 +54,7 @@ npm run dev
 | `ROLE_BOT_ID`                  | ✅ Sí       | Rol de bots, excluido de `/travestir`.                                                           |
 | `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir`, `/verificar`, `/enjaular` y `/cuckear`.                   |
 | `ROLE_120KG_ID`                | ✅ Sí       | Rol 120kg que se lista en los roles del staff dentro de `/stats`.                                 |
-| `ROLE_VERIFICADE_ID`           | ✅ Sí       | Rol que asigna `/verificar` y que da acceso a los canales NSFW.                                  |
+| `ROLE_VERIFICADE_ID`           | ✅ Sí       | Rol que asignan `/verificar` y las solicitudes aceptadas, y que da acceso a los canales NSFW.    |
 | `ROLE_PRESO_ID`                | ✅ Sí       | Rol que asigna `/enjaular` al quitar los roles traviatense y verificade.                          |
 | `ROLE_CUCK_ID`                 | ✅ Sí       | Rol que asigna `/cuckear` al quitar los roles traviatense y verificade.                           |
 | `ROLE_OTOKONOKO_ID`            | ✅ Sí       | Rol que se pinguea en los avisos de stock de Otokonoko y al que se suscriben los usuarios.       |
@@ -62,8 +62,9 @@ npm run dev
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
 | `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación y castigos.                         |
-| `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal de verificación que se menciona en el anuncio de `/verificar`.                             |
+| `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal donde se publica el panel de verificación y que se menciona en el anuncio de `/verificar`. |
 | `CHANNEL_JAULA_ID`             | ✅ Sí       | Canal al que sólo tienen acceso los presos y donde se les da la bienvenida.                      |
+| `CHANNEL_ADMIN_ID`             | ✅ Sí       | Categoría admin donde se crean los canales temporales de verificación.                           |
 | `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
 | `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
@@ -96,6 +97,16 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 <br>
 
+## 🪪 Verificación por ticket
+
+El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CHANNEL_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 200kg/120kg y el bot.
+
+La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario puede cancelarla; el staff puede aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
+
+Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Los tickets vencen a las 48 horas; el bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
+
+<br>
+
 ## 🐦 Publicaciones en X
 
 `/traviatweet` envía por DM al usuario `TWEET_USER_ID` un link de X con el texto precargado. Si el mensaje supera los 260 caracteres, el bot responde con un error efímero y no publica nada. Mientras haya mensajes pendientes, Traviatita revisa `x.com/traviatitatan` cada `TWEET_CHECK_MINUTES` minutos y, cuando encuentra un tweet con el mismo texto, responde al mensaje del canal con el link y menciona a quien usó el comando.
@@ -106,7 +117,7 @@ La detección se hace leyendo el HTML público del perfil, sin API key. Si el te
 
 ## 💾 Persistencia
 
-El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`, `verificaciones.json`, `verificaciones-log.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
 
 El seguimiento de entradas y salidas de miembros empieza a contar desde que se inicia esta versión del bot; no reconstruye el historial anterior.
 
@@ -165,6 +176,7 @@ dado.js                  Tiradas de dados
 miembros.js              Seguimiento diario de entradas y salidas de miembros
 travestir.js             Asignación del rol traviatense
 verificar.js             Asignación del rol verificade y anuncio en el canal general
+verificaciones.js        Panel, tickets temporales, vencimiento y logs de verificación
 tweets.js                Detección de tweets publicados y respuesta en el canal
 ```
 

@@ -5,7 +5,8 @@ const interactions = {
   dias: require("../interactions/dias"),
   hormonas: require("../interactions/hormonas"),
   quilombo: require("../interactions/quilombo"),
-  notify: require("../interactions/notify")
+  notify: require("../interactions/notify"),
+  verificacion: require("../interactions/verificacion")
 };
 
 async function dispatch(interaction) {

@@ -1,4 +1,5 @@
 const { roles, channels } = require("./config");
+const verificaciones = require("./verificaciones");
 const { hasRole } = require("./utils/permissions");
 const { sendToChannel } = require("./utils/discord");
 
@@ -43,9 +44,25 @@ function start(client) {
     if (!newMember.roles.cache.has(ROLE_VERIFICADE)) return;
     if (pending.delete(newMember.id)) return;
 
+    const fromTicket = verificaciones.consumeExpectedRoleChange(
+      newMember.id
+    );
+
+    if (!fromTicket) {
+      verificaciones.logVerification({
+        action: "accepted",
+        method: "manual",
+        target: newMember.user
+      });
+    }
+
     try {
       await announce(client, newMember);
-      console.log(`${TAG} ✅ ${newMember.user.tag} verificado manualmente`);
+      console.log(
+        `${TAG} ✅ ${newMember.user.tag} verificado${
+          fromTicket ? " por ticket" : " manualmente"
+        }`
+      );
     } catch (err) {
       console.error(
         `${TAG} ⚠️ no pude anunciar a ${newMember.user.tag}: ${err.message}`
