@@ -5,6 +5,7 @@ const {
   ChannelType,
   EmbedBuilder,
   MessageFlags,
+  OverwriteType,
   PermissionFlagsBits
 } = require("discord.js");
 const config = require("./config");
@@ -41,6 +42,10 @@ function formatRemaining(ms) {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+}
+
+function quote(text) {
+  return `> ${String(text).replace(/\n/g, "\n> ")}`;
 }
 
 const TICKET_TEXT = (username, expiresAt) =>
@@ -124,7 +129,7 @@ function sanitizeUsername(username, fallbackId) {
 
 function panelPayload() {
   return {
-    content: PANEL_TEXT,
+    content: quote(PANEL_TEXT),
     components: [
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -157,7 +162,7 @@ function ticketEmbed(username, expiresAt) {
   return new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle("Solicitud de verificación")
-    .setDescription(TICKET_TEXT(username, expiresAt));
+    .setDescription(quote(TICKET_TEXT(username, expiresAt)));
 }
 
 function ticketPayload(user, channelId, expiresAt) {
@@ -481,21 +486,29 @@ async function openTicket(interaction) {
 
     overwrites.set(guild.roles.everyone.id, {
       id: guild.roles.everyone.id,
+      type: OverwriteType.Role,
       deny: [PermissionFlagsBits.ViewChannel]
     });
     overwrites.set(user.id, {
       id: user.id,
+      type: OverwriteType.Member,
       allow: memberAllow
     });
     for (const roleId of STAFF_ROLES) {
-      overwrites.set(roleId, { id: roleId, allow: staffAllow });
+      overwrites.set(roleId, {
+        id: roleId,
+        type: OverwriteType.Role,
+        allow: staffAllow
+      });
     }
     overwrites.set(guild.ownerId, {
       id: guild.ownerId,
+      type: OverwriteType.Member,
       allow: staffAllow
     });
     overwrites.set(interaction.client.user.id, {
       id: interaction.client.user.id,
+      type: OverwriteType.Member,
       allow: botAllow
     });
 
