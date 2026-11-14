@@ -13,6 +13,7 @@ const { timestamp } = require("../utils/discord");
 
 const TAG = "📊 [stats]";
 const CACHE_MS = 60_000;
+const SECTION_GAP = "\n\u200b";
 
 const STOCK = create("stock.json", TAG);
 const ASTRO = create("astro.json", TAG);
@@ -121,7 +122,7 @@ function buildEmbed(guild, stats, client) {
           `Humanos: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**\n` +
           `👑 Owner: <@${owner}>\n` +
           `🛡️ Rol 200kg (${stats.admin200kg.length}): ${mentionList(stats.admin200kg)}\n` +
-          `🔑 Rol 120kg (${stats.admin120kg.length}): ${mentionList(stats.admin120kg)}`
+          `🔑 Rol 120kg (${stats.admin120kg.length}): ${mentionList(stats.admin120kg)}${SECTION_GAP}`
       },
       {
         name: "🏷️ Roles",
@@ -132,7 +133,7 @@ function buildEmbed(guild, stats, client) {
           `🔒 Presos: **${numberFmt.format(stats.preso)}**\n` +
           `🐂 Cucks: **${numberFmt.format(stats.cuck)}**\n` +
           `💊 Suscriptes Otokonoko: **${numberFmt.format(stats.otokonoko)}**\n` +
-          `🚀 Suscriptes Astrovials: **${numberFmt.format(stats.astrovials)}**`
+          `🚀 Suscriptes Astrovials: **${numberFmt.format(stats.astrovials)}**${SECTION_GAP}`
       },
       {
         name: "🚪 Movimiento de miembros",
@@ -140,7 +141,7 @@ function buildEmbed(guild, stats, client) {
           movementLine("Hoy", movement.today),
           movementLine("Esta semana", movement.week),
           movementLine("Este mes", movement.month)
-        ].join("\n")
+        ].join("\n") + SECTION_GAP
       },
       {
         name: "📡 Estado",
