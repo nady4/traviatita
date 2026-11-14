@@ -33,9 +33,9 @@ const COUNTDOWN_MS = 60 * 1000;
 const EMBED_COLOR = 0xe77cae;
 
 const PANEL_TEXT =
-  "Hacé click en el botón debajo para verificarte y poder acceder a los canales NSFW. " +
-  "Vamos a pedirte una foto de alguna identificación que diga tu fecha de nacimiento " +
-  "(censurá cualquier otra información) y EN LA MISMA IMAGEN algún papel que diga tu " +
+  "🔞 Hacé click en el botón debajo para verificarte y poder acceder a los canales NSFW.\n\n" +
+  "📸 Vamos a pedirte una foto de alguna identificación 🪪 que diga tu fecha de nacimiento " +
+  "(censurá cualquier otra información) y EN LA MISMA IMAGEN algún papel 🏷️ que diga tu " +
   "username junto al nombre del servidor.";
 
 function formatRemaining(ms) {
@@ -50,9 +50,9 @@ function quote(text) {
 }
 
 const TICKET_TEXT = (username, expiresAt) =>
-  `Hola ${username}! Para verificarte, vamos a necesitar una foto de alguna ` +
-  "identificación que diga tu fecha de nacimiento (censurá cualquier otra información) " +
-  "y EN LA MISMA IMAGEN algún papel que diga tu username junto al nombre del servidor. " +
+  `🔞 Hola ${username}! Para verificarte, vamos a necesitar una foto 📸 de alguna ` +
+  "identificación 🪪 que diga tu fecha de nacimiento (censurá cualquier otra información) " +
+  "y EN LA MISMA IMAGEN algún papel 🏷️ que diga tu username junto al nombre del servidor. " +
   `Tenés ${formatRemaining(expiresAt - Date.now())} para hacerlo, ` +
   "luego la solicitud se cerrará y deberás crear una nueva.";
 
