@@ -100,7 +100,7 @@ function buildEmbed(guild, stats, client) {
 
   return new EmbedBuilder()
     .setColor(0x9b59b6)
-    .setTitle("📊 Traviatita — Estado del servidor")
+    .setTitle("📊 Operación Traviata - Estado del servidor")
     .addFields(
       {
         name: "👥 Comunidad",
