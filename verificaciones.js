@@ -24,7 +24,7 @@ const STAFF_ROLES = [
   config.roles.admin120kg
 ];
 const CHANNEL_VERIFICACION = config.channels.verificacion;
-const CHANNEL_ADMIN = config.channels.admin;
+const CATEGORY_ADMIN = config.channels.admin;
 
 const TICKET_TTL_MS = 48 * 60 * 60 * 1000;
 const SWEEP_MS = 5 * 60 * 1000;
@@ -438,15 +438,15 @@ async function openTicket(interaction) {
     let category = null;
 
     try {
-      category = await guild.channels.fetch(CHANNEL_ADMIN);
+      category = await guild.channels.fetch(CATEGORY_ADMIN);
     } catch (err) {
       console.error(
-        `${TAG} ⚠️ no pude acceder a CHANNEL_ADMIN_ID: ${err.message}`
+        `${TAG} ⚠️ no pude acceder a CATEGORY_ADMIN_ID: ${err.message}`
       );
     }
 
     if (!category || category.type !== ChannelType.GuildCategory) {
-      console.error(`${TAG} ⚠️ CHANNEL_ADMIN_ID no es una categoría válida`);
+      console.error(`${TAG} ⚠️ CATEGORY_ADMIN_ID no es una categoría válida`);
       await respond(
         interaction,
         "❌ La categoría configurada para verificaciones no es válida."
@@ -502,7 +502,7 @@ async function openTicket(interaction) {
     const channel = await guild.channels.create({
       name: `verificacion-${safeName}`,
       type: ChannelType.GuildText,
-      parent: CHANNEL_ADMIN,
+      parent: CATEGORY_ADMIN,
       topic:
         `Verificación de ${user.tag} (${user.id}) · ` +
         `vence ${timestamp(expiresAt, "f")}`,

@@ -58,7 +58,7 @@ module.exports = {
     general: snowflake("CHANNEL_GENERAL_ID"),
     verificacion: snowflake("CHANNEL_VERIFICACION_ID"),
     jaula: snowflake("CHANNEL_JAULA_ID"),
-    admin: snowflake("CHANNEL_ADMIN_ID")
+    admin: snowflake("CATEGORY_ADMIN_ID")
   },
   tweetUserId: snowflake("TWEET_USER_ID"),
   tweetCheckMinutes: positiveInt("TWEET_CHECK_MINUTES"),

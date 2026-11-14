@@ -65,7 +65,7 @@ npm run dev
 | `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación y castigos.                         |
 | `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal donde se publica el panel de verificación y que se menciona en el anuncio de `/verificar`. |
 | `CHANNEL_JAULA_ID`             | ✅ Sí       | Canal al que sólo tienen acceso los presos y donde se les da la bienvenida.                      |
-| `CHANNEL_ADMIN_ID`             | ✅ Sí       | Categoría admin donde se crean los canales temporales de verificación.                           |
+| `CATEGORY_ADMIN_ID`            | ✅ Sí       | Categoría admin donde se crean los canales temporales de verificación.                           |
 | `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
 | `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
@@ -100,7 +100,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 ## 🪪 Verificación por ticket
 
-El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CHANNEL_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
+El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CATEGORY_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
 
 La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario puede cancelarla; el owner y el staff pueden aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
 
