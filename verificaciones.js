@@ -71,7 +71,11 @@ function loadState() {
   const raw = STATE.load({});
   const tickets = {};
 
-  if (raw?.tickets && typeof raw.tickets === "object" && !Array.isArray(raw.tickets)) {
+  if (
+    raw?.tickets &&
+    typeof raw.tickets === "object" &&
+    !Array.isArray(raw.tickets)
+  ) {
     for (const [channelId, ticket] of Object.entries(raw.tickets)) {
       if (!ticket || typeof ticket !== "object") continue;
       if (typeof ticket.userId !== "string") continue;
@@ -98,7 +102,11 @@ function loadState() {
 
   const cooldowns = {};
 
-  if (raw?.cooldowns && typeof raw.cooldowns === "object" && !Array.isArray(raw.cooldowns)) {
+  if (
+    raw?.cooldowns &&
+    typeof raw.cooldowns === "object" &&
+    !Array.isArray(raw.cooldowns)
+  ) {
     for (const [userId, until] of Object.entries(raw.cooldowns)) {
       if (/^\d{17,20}$/.test(userId) && Number.isFinite(until)) {
         cooldowns[userId] = until;
@@ -291,7 +299,13 @@ function consumeExpectedRoleChange(userId) {
   return true;
 }
 
-function logVerification({ action, method, actor = null, target = null, channelId = null }) {
+function logVerification({
+  action,
+  method,
+  actor = null,
+  target = null,
+  channelId = null
+}) {
   const entry = {
     at: new Date().toISOString(),
     action,
@@ -381,8 +395,7 @@ async function sendExpiryNotice(client, ticket) {
 
   if (!user) return;
 
-  const retryAt =
-    cooldownFor(ticket.userId) ?? Date.now() + COOLDOWN_MS;
+  const retryAt = cooldownFor(ticket.userId) ?? Date.now() + COOLDOWN_MS;
 
   await user.send({ content: expireDm(retryAt) }).catch((err) => {
     console.error(
@@ -463,7 +476,7 @@ async function openTicket(interaction) {
   if (cooldownUntil) {
     await respond(
       interaction,
-      `⏳ Podrás crear otra solicitud el <t:${Math.floor(cooldownUntil / 1000)}:R>.`
+      `⏳ Podrás crear otra solicitud <t:${Math.floor(cooldownUntil / 1000)}:R>.`
     );
     return;
   }
@@ -622,10 +635,7 @@ async function openTicket(interaction) {
     }
 
     console.log(`${TAG} 🪪 ${user.tag} abrió ${channel.name}`);
-    await respond(
-      interaction,
-      `✅ Tu solicitud fue creada: <#${channel.id}>.`
-    );
+    await respond(interaction, `✅ Tu solicitud fue creada: <#${channel.id}>.`);
   } catch (err) {
     console.error(
       `${TAG} ⚠️ no pude crear el ticket de ${user.tag}: ${err.message}`
@@ -694,7 +704,7 @@ async function acceptTicket(interaction, channelId) {
       console.error(`${TAG} ⚠️ no pude asignar verificade: ${err.message}`);
       await respond(
         interaction,
-        '❌ No pude asignar el rol verificade (revisá permisos y jerarquía de roles).'
+        "❌ No pude asignar el rol verificade (revisá permisos y jerarquía de roles)."
       );
       return;
     }
@@ -845,10 +855,12 @@ const refreshTicketCountdowns = singleFlight(async (client) => {
       let message = null;
 
       if (ticket.messageId) {
-        message = await channel.messages.fetch(ticket.messageId).catch((err) => {
-          if (err.code === 10008) return null;
-          throw err;
-        });
+        message = await channel.messages
+          .fetch(ticket.messageId)
+          .catch((err) => {
+            if (err.code === 10008) return null;
+            throw err;
+          });
       }
 
       if (!message) {
@@ -912,9 +924,7 @@ function start(client) {
 
   const countdownTimer = setInterval(() => {
     refreshTicketCountdowns(client).catch((err) => {
-      console.error(
-        `${TAG} ⚠️ error al actualizar contadores: ${err.message}`
-      );
+      console.error(`${TAG} ⚠️ error al actualizar contadores: ${err.message}`);
     });
   }, COUNTDOWN_MS);
 
