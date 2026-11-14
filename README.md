@@ -52,11 +52,14 @@ npm run dev
 | `STATE_DIR`                    | ➖ No       | Carpeta donde se guardan los JSON de estado. Si no se define, se usa el directorio del proyecto. |
 | `ROLE_TRAVIATENSE_ID`          | ✅ Sí       | Rol que asigna `/travestir` y que reciben los nuevos miembros.                                   |
 | `ROLE_BOT_ID`                  | ✅ Sí       | Rol de bots, excluido de `/travestir`.                                                           |
-| `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir`.                                                           |
+| `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir` y `/verificar`.                                             |
+| `ROLE_VERIFICADE_ID`           | ✅ Sí       | Rol que asigna `/verificar` y que da acceso a los canales NSFW.                                  |
 | `ROLE_OTOKONOKO_ID`            | ✅ Sí       | Rol que se pinguea en los avisos de stock de Otokonoko y al que se suscriben los usuarios.       |
 | `ROLE_ASTROVIALS_ID`           | ✅ Sí       | Rol que se pinguea en los avisos de stock de Astrovials y al que se suscriben los usuarios.      |
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
+| `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación.                                    |
+| `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal de verificación que se menciona en el anuncio de `/verificar`.                             |
 | `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
 | `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
@@ -81,6 +84,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | 💥 `/quilombo`       | Cuenta los días sin quilombos; incluye un botón para reiniciar la cuenta (solo roles autorizados).        |
 | 🎲 `/dado`           | Tira dados d3–d100, un dX personalizado o un número al azar en un rango.                                  |
 | 🏳️‍⚧️ `/travestir`      | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg).                              |
+| ✅ `/verificar <usuario>` | Verifica a un miembro con el rol verificade y anuncia en el canal general que ya tiene acceso a los canales NSFW (solo rol 200kg). |
 | 🐱 `/github`         | Muestra el repositorio de GitHub del proyecto.                                                            |
 
 <br>
@@ -150,6 +154,7 @@ dias.js                  Contador de días de HRT
 quilombo.js              Contador de días sin quilombos
 dado.js                  Tiradas de dados
 travestir.js             Asignación del rol traviatense
+verificar.js             Asignación del rol verificade y anuncio en el canal general
 tweets.js                Detección de tweets publicados y respuesta en el canal
 ```
 

@@ -44,12 +44,15 @@ module.exports = {
     traviatense: snowflake("ROLE_TRAVIATENSE_ID"),
     bot: snowflake("ROLE_BOT_ID"),
     admin200kg: snowflake("ROLE_200KG_ID"),
+    verificade: snowflake("ROLE_VERIFICADE_ID"),
     otokonoko: snowflake("ROLE_OTOKONOKO_ID"),
     astrovials: snowflake("ROLE_ASTROVIALS_ID")
   },
   channels: {
     quilombo: snowflake("CHANNEL_ANNOUNCE_QUILOMBO_ID"),
-    stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID")
+    stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID"),
+    general: snowflake("CHANNEL_GENERAL_ID"),
+    verificacion: snowflake("CHANNEL_VERIFICACION_ID")
   },
   tweetUserId: snowflake("TWEET_USER_ID"),
   tweetCheckMinutes: positiveInt("TWEET_CHECK_MINUTES"),
