@@ -53,6 +53,7 @@ npm run dev
 | `ROLE_TRAVIATENSE_ID`          | ✅ Sí       | Rol que asigna `/travestir` y que reciben los nuevos miembros.                                   |
 | `ROLE_BOT_ID`                  | ✅ Sí       | Rol de bots, excluido de `/travestir`.                                                           |
 | `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir`, `/verificar`, `/enjaular` y `/cuckear`.                   |
+| `ROLE_120KG_ID`                | ✅ Sí       | Rol 120kg que se lista en los roles del staff dentro de `/stats`.                                 |
 | `ROLE_VERIFICADE_ID`           | ✅ Sí       | Rol que asigna `/verificar` y que da acceso a los canales NSFW.                                  |
 | `ROLE_PRESO_ID`                | ✅ Sí       | Rol que asigna `/enjaular` al quitar los roles traviatense y verificade.                          |
 | `ROLE_CUCK_ID`                 | ✅ Sí       | Rol que asigna `/cuckear` al quitar los roles traviatense y verificade.                           |

@@ -44,6 +44,7 @@ module.exports = {
     traviatense: snowflake("ROLE_TRAVIATENSE_ID"),
     bot: snowflake("ROLE_BOT_ID"),
     admin200kg: snowflake("ROLE_200KG_ID"),
+    admin120kg: snowflake("ROLE_120KG_ID"),
     verificade: snowflake("ROLE_VERIFICADE_ID"),
     preso: snowflake("ROLE_PRESO_ID"),
     cuck: snowflake("ROLE_CUCK_ID"),

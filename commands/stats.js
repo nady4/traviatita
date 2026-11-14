@@ -47,7 +47,9 @@ async function memberStats(guild) {
     preso: 0,
     cuck: 0,
     otokonoko: 0,
-    astrovials: 0
+    astrovials: 0,
+    admin200kg: [],
+    admin120kg: []
   };
 
   for (const member of members.values()) {
@@ -63,6 +65,8 @@ async function memberStats(guild) {
     if (member.roles.cache.has(roles.cuck)) data.cuck++;
     if (member.roles.cache.has(roles.otokonoko)) data.otokonoko++;
     if (member.roles.cache.has(roles.astrovials)) data.astrovials++;
+    if (member.roles.cache.has(roles.admin200kg)) data.admin200kg.push(member.id);
+    if (member.roles.cache.has(roles.admin120kg)) data.admin120kg.push(member.id);
   }
 
   memberCache.set(guild.id, { at: Date.now(), data });
@@ -72,6 +76,13 @@ async function memberStats(guild) {
 function fmtBalance(joins, leaves) {
   const balance = joins - leaves;
   return `${balance > 0 ? "+" : ""}${numberFmt.format(balance)}`;
+}
+
+function mentionList(ids) {
+  if (ids.length === 0) return "nadie";
+  const shown = ids.slice(0, 20).map((id) => `<@${id}>`);
+  if (ids.length > 20) shown.push(`y ${ids.length - 20} más`);
+  return shown.join(", ");
 }
 
 function movementLine(label, counts) {
@@ -96,6 +107,7 @@ function buildEmbed(guild, stats, client) {
   const streak = quilombo.get(guild.id);
   const movement = miembros.summary();
   const unverified = Math.max(0, stats.humans - stats.verificade);
+  const owner = guild.ownerId;
   const ping = Math.round(client.ws.ping);
 
   return new EmbedBuilder()
@@ -106,7 +118,10 @@ function buildEmbed(guild, stats, client) {
         name: "👥 Comunidad",
         value:
           `Miembros: **${numberFmt.format(stats.total)}**\n` +
-          `Humanes: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**`
+          `Humanos: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**\n` +
+          `👑 Owner: <@${owner}>\n` +
+          `🛡️ Rol 200kg (${stats.admin200kg.length}): ${mentionList(stats.admin200kg)}\n` +
+          `🔑 Rol 120kg (${stats.admin120kg.length}): ${mentionList(stats.admin120kg)}`
       },
       {
         name: "🏷️ Roles",
