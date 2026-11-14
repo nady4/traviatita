@@ -17,7 +17,6 @@ const SECTION_GAP = "\n\u200b";
 
 const STOCK = create("stock.json", TAG);
 const ASTRO = create("astro.json", TAG);
-const TWEETS = create("tweets.json", TAG);
 
 const memberCache = new Map();
 const numberFmt = new Intl.NumberFormat("es-AR");
@@ -103,13 +102,11 @@ function stockLine(label, store, products) {
   return `${label}: **${inStock}/${products.length}** en stock · chequeo ${check}`;
 }
 
-function buildEmbed(guild, stats, client) {
-  const pendingTweets = (TWEETS.load({}).pending ?? []).length;
+function buildEmbed(guild, stats) {
   const streak = quilombo.get(guild.id);
   const movement = miembros.summary();
   const unverified = Math.max(0, stats.humans - stats.verificade);
   const owner = guild.ownerId;
-  const ping = Math.round(client.ws.ping);
 
   return new EmbedBuilder()
     .setColor(0x9b59b6)
@@ -122,7 +119,11 @@ function buildEmbed(guild, stats, client) {
           `Humanos: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**\n` +
           `👑 Owner: <@${owner}>\n` +
           `🛡️ Rol 200kg (${stats.admin200kg.length}): ${mentionList(stats.admin200kg)}\n` +
-          `🔑 Rol 120kg (${stats.admin120kg.length}): ${mentionList(stats.admin120kg)}${SECTION_GAP}`
+          `🔑 Rol 120kg (${stats.admin120kg.length}): ${mentionList(stats.admin120kg)}`
+      },
+      {
+        name: "\u200b",
+        value: `💥 Racha sin quilombos: **${streak ? fmtDuration(Date.now() - Date.parse(streak.ts)) : "sin datos"}**${SECTION_GAP}`
       },
       {
         name: "🏷️ Roles",
@@ -144,13 +145,10 @@ function buildEmbed(guild, stats, client) {
         ].join("\n") + SECTION_GAP
       },
       {
-        name: "📡 Estado",
+        name: "📦 Stock",
         value:
-          `${stockLine("📦 Otokonoko", STOCK, OTOKONOKO_PRODUCTS)}\n` +
-          `${stockLine("🚀 Astrovials", ASTRO, ASTROVIALS_PRODUCTS)}\n` +
-          `💥 Racha sin quilombos: **${streak ? fmtDuration(Date.now() - Date.parse(streak.ts)) : "sin datos"}**\n` +
-          `🐦 Tweets pendientes: **${pendingTweets}**\n` +
-          `⏱️ Uptime: **${fmtDuration(client.uptime)}** · Ping: **${ping >= 0 ? `${ping} ms` : "desconocido"}**`
+          `${stockLine("💊 Otokonoko", STOCK, OTOKONOKO_PRODUCTS)}\n` +
+          `${stockLine("🚀 Astrovials", ASTRO, ASTROVIALS_PRODUCTS)}`
       }
     )
     .setTimestamp();
@@ -174,7 +172,7 @@ module.exports = {
     try {
       const stats = await memberStats(interaction.guild);
       await interaction.editReply({
-        embeds: [buildEmbed(interaction.guild, stats, interaction.client)]
+        embeds: [buildEmbed(interaction.guild, stats)]
       });
     } catch (err) {
       console.error(`${TAG} ⚠️ ${err.message}`);
