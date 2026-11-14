@@ -131,7 +131,7 @@ module.exports = {
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply();
     try {
       const stats = await memberStats(interaction.guild);
       await interaction.editReply({
