@@ -86,6 +86,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | ⏳ `/dias`           | Registra la fecha de inicio de HRT y muestra el tiempo transcurrido.                                      |
 | 💥 `/quilombo`       | Cuenta los días sin quilombos; incluye un botón para reiniciar la cuenta (solo roles autorizados).        |
 | 🎲 `/dado`           | Tira dados d3–d100, un dX personalizado o un número al azar en un rango.                                  |
+| 📊 `/stats`          | Muestra miembros, roles, stock, racha sin quilombos, tweets pendientes y uptime del bot.                   |
 | 🏳️‍⚧️ `/travestir`      | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg).                              |
 | ✅ `/verificar <usuario>` | Verifica a un miembro con el rol verificade y anuncia en el canal general que ya tiene acceso a los canales NSFW (solo rol 200kg). |
 | 🔒 `/enjaular <usuario>` | Quita los roles traviatense y verificade, asigna el rol preso, anuncia en general y da la bienvenida en el canal de presos (solo rol 200kg). |
