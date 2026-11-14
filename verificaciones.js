@@ -53,10 +53,10 @@ const TICKET_TEXT = (username, expiresAt) =>
   "luego la solicitud se cerrará y deberás crear una nueva.";
 
 const REJECT_DM =
-  "❌ Tu solicitud de verificación fue rechazada. " +
+  "❌ Tu solicitud de verificación a Operación Traviata fue rechazada. " +
   "Podés crear una nueva desde el canal de verificación.";
 const EXPIRE_DM =
-  "⌛ Tu solicitud de verificación expiró después de 48 horas. " +
+  "⌛ Tu solicitud de verificación a Operación Traviata expiró después de 48 horas. " +
   "Podés crear una nueva desde el canal de verificación.";
 
 let state = loadState();
