@@ -45,10 +45,6 @@ function formatRemaining(ms) {
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
 }
 
-function quote(text) {
-  return `> ${String(text).replace(/\n/g, "\n> ")}`;
-}
-
 const TICKET_TEXT = (username, expiresAt) =>
   `🔞 Hola ${username}! Para verificarte, vamos a necesitar una foto 📸 de alguna ` +
   "identificación 🪪 que diga tu fecha de nacimiento (censurá cualquier otra información) " +
@@ -168,7 +164,7 @@ function ticketEmbed(username, expiresAt) {
   return new EmbedBuilder()
     .setColor(EMBED_COLOR)
     .setTitle("✅ Solicitud de verificación")
-    .setDescription(quote(TICKET_TEXT(username, expiresAt)));
+    .setDescription(TICKET_TEXT(username, expiresAt));
 }
 
 function ticketPayload(user, channelId, expiresAt) {
