@@ -30,6 +30,7 @@ const CATEGORY_ADMIN = config.channels.admin;
 const TICKET_TTL_MS = 48 * 60 * 60 * 1000;
 const SWEEP_MS = 5 * 60 * 1000;
 const COUNTDOWN_MS = 60 * 1000;
+const EMBED_COLOR = 0xe77cae;
 
 const PANEL_TEXT =
   "Hacé click en el botón debajo para verificarte y poder acceder a los canales NSFW. " +
@@ -52,8 +53,8 @@ const TICKET_TEXT = (username, expiresAt) =>
   `Hola ${username}! Para verificarte, vamos a necesitar una foto de alguna ` +
   "identificación que diga tu fecha de nacimiento (censurá cualquier otra información) " +
   "y EN LA MISMA IMAGEN algún papel que diga tu username junto al nombre del servidor. " +
-  `Tenés ${formatRemaining(expiresAt - Date.now())} para hacerlo ` +
-  `(vence ${timestamp(expiresAt, "R")}), luego la solicitud se cerrará y deberás crear una nueva.`;
+  `Tenés ${formatRemaining(expiresAt - Date.now())} para hacerlo, ` +
+  "luego la solicitud se cerrará y deberás crear una nueva.";
 
 const REJECT_DM =
   "❌ Tu solicitud de verificación fue rechazada. " +
@@ -128,8 +129,13 @@ function sanitizeUsername(username, fallbackId) {
 }
 
 function panelPayload() {
+  const embed = new EmbedBuilder()
+    .setColor(EMBED_COLOR)
+    .setDescription(quote(PANEL_TEXT));
+
   return {
-    content: quote(PANEL_TEXT),
+    content: "",
+    embeds: [embed],
     components: [
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -160,8 +166,8 @@ function ticketButtons(channelId) {
 
 function ticketEmbed(username, expiresAt) {
   return new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle("Solicitud de verificación")
+    .setColor(EMBED_COLOR)
+    .setTitle("✅ Solicitud de verificación")
     .setDescription(quote(TICKET_TEXT(username, expiresAt)));
 }
 
