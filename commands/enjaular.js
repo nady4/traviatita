@@ -8,7 +8,7 @@ const ROLE_TRAVIATENSE = roles.traviatense;
 const ROLE_VERIFICADE = roles.verificade;
 const ROLE_PRESO = roles.preso;
 const CHANNEL_GENERAL = channels.general;
-const CHANNEL_PRESO = channels.preso;
+const CHANNEL_JAULA = channels.jaula;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -94,10 +94,10 @@ module.exports = {
       sendToChannel(interaction.client, CHANNEL_GENERAL, {
         content:
           `🔒 <@${member.id}> ha sido enjaulade y perdió acceso a todo el servidor. ` +
-          `Sólo puede ver y escribir en <#${CHANNEL_PRESO}>.`,
+          `Sólo puede ver y escribir en <#${CHANNEL_JAULA}>.`,
         allowedMentions: { users: [member.id] }
       }),
-      sendToChannel(interaction.client, CHANNEL_PRESO, {
+      sendToChannel(interaction.client, CHANNEL_JAULA, {
         content:
           `🔒 ¡Bienvenide a la cárcel, <@${member.id}>! ` +
           "A partir de ahora sólo tenés acceso a este canal. " +
@@ -125,7 +125,7 @@ module.exports = {
     }
 
     await interaction.editReply(
-      `🔒 Enjaulaste a <@${member.id}>. El anuncio se publicó en <#${CHANNEL_GENERAL}> y la bienvenida en <#${CHANNEL_PRESO}>.`
+      `🔒 Enjaulaste a <@${member.id}>. El anuncio se publicó en <#${CHANNEL_GENERAL}> y la bienvenida en <#${CHANNEL_JAULA}>.`
     );
   }
 };

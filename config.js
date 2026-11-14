@@ -55,7 +55,7 @@ module.exports = {
     stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID"),
     general: snowflake("CHANNEL_GENERAL_ID"),
     verificacion: snowflake("CHANNEL_VERIFICACION_ID"),
-    preso: snowflake("CHANNEL_PRESO_ID")
+    jaula: snowflake("CHANNEL_JAULA_ID")
   },
   tweetUserId: snowflake("TWEET_USER_ID"),
   tweetCheckMinutes: positiveInt("TWEET_CHECK_MINUTES"),

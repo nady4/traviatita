@@ -62,7 +62,7 @@ npm run dev
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
 | `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación y castigos.                         |
 | `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal de verificación que se menciona en el anuncio de `/verificar`.                             |
-| `CHANNEL_PRESO_ID`             | ✅ Sí       | Canal al que sólo tienen acceso los presos y donde se les da la bienvenida.                      |
+| `CHANNEL_JAULA_ID`             | ✅ Sí       | Canal al que sólo tienen acceso los presos y donde se les da la bienvenida.                      |
 | `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
 | `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
 | `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
