@@ -92,8 +92,8 @@ module.exports = {
     try {
       await sendToChannel(interaction.client, CHANNEL_GENERAL, {
         content:
-          `🐂 <@${member.id}> ha sido cuckeade y ya no tiene acceso a los canales NSFW. ` +
-          "Sólo puede ver el servidor, pero no escribir.",
+          `🐂 <@${member.id}> ha sido cuckeade. ` +
+          "Ahora sólo puede ver el servidor, pero no escribir.",
         allowedMentions: { users: [member.id] }
       });
     } catch (err) {
