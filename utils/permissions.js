@@ -1,3 +1,5 @@
+const config = require("../config");
+
 function roleCache(interaction) {
   if (!interaction.inGuild()) return null;
   return interaction.member?.roles?.cache ?? null;
@@ -13,4 +15,19 @@ function hasAnyRole(interaction, roleIds) {
   return !!cache && roleIds.some((id) => cache.has(id));
 }
 
-module.exports = { hasRole, hasAnyRole };
+function canPunish(interaction, member) {
+  if (!interaction.inGuild()) return false;
+  if (member.id === interaction.guild.ownerId) return false;
+  if (interaction.user.id === interaction.guild.ownerId) return true;
+
+  const actorPosition = interaction.member?.roles?.highest?.position;
+  const targetPosition = member.roles?.highest?.position;
+
+  return (
+    Number.isInteger(actorPosition) &&
+    Number.isInteger(targetPosition) &&
+    actorPosition > targetPosition
+  );
+}
+
+module.exports = { hasRole, hasAnyRole, canPunish };

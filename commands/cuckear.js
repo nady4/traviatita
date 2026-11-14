@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { roles, channels } = require("../config");
-const { hasRole } = require("../utils/permissions");
+const { hasRole, canPunish } = require("../utils/permissions");
 const { sendToChannel } = require("../utils/discord");
 
 const ROLE_200KG = roles.admin200kg;
@@ -52,6 +52,14 @@ module.exports = {
     if (member.user.bot) {
       await interaction.reply({
         content: "❌ No puedo cuckear bots.",
+        flags: MessageFlags.Ephemeral
+      });
+      return;
+    }
+
+    if (!canPunish(interaction, member)) {
+      await interaction.reply({
+        content: "🚫 No podés apuntar a alguien con tu mismo rol o superior.",
         flags: MessageFlags.Ephemeral
       });
       return;

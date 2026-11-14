@@ -61,12 +61,15 @@ async function httpGet(url, headers = {}, depth = 0) {
   });
   eatCookies(res);
   const location = res.headers.get("location");
-  if (res.status >= 300 && res.status < 400 && location && depth < 5) {
-    const next = new URL(location, url);
-    if (next.hostname.endsWith("otkph.am")) {
-      return httpGet(next.href, headers, depth + 1);
+    if (res.status >= 300 && res.status < 400 && location && depth < 5) {
+      const next = new URL(location, url);
+      if (
+        next.hostname === "otkph.am" ||
+        next.hostname.endsWith(".otkph.am")
+      ) {
+        return httpGet(next.href, headers, depth + 1);
+      }
     }
-  }
   return { res, url };
 }
 

@@ -7,6 +7,29 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
 
+client.on("error", (err) => {
+  console.error("⚠️ [gateway] error:", err.message);
+});
+
+client.on("shardError", (err) => {
+  console.error("⚠️ [gateway] error de shard:", err.message);
+});
+
+client.on("warn", (info) => {
+  console.warn(`⚠️ [gateway] ${info}`);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error(
+    "⚠️ [proceso] rechazo de promesa no manejado:",
+    reason instanceof Error ? reason.message : reason
+  );
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("⚠️ [proceso] excepción no capturada:", err.stack ?? err.message);
+});
+
 client.commands = loadCommands();
 loadEvents(client);
 

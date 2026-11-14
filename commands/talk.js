@@ -13,10 +13,22 @@ module.exports = {
 
   async execute(interaction) {
     const mensaje = interaction.options.getString("mensaje");
+
+    if (mensaje.length > 2000) {
+      await interaction.reply({
+        content: `⚠️ El mensaje tiene ${mensaje.length} caracteres y el máximo es 2000, acortalo.`,
+        flags: MessageFlags.Ephemeral
+      });
+      return;
+    }
+
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      await interaction.channel.send(mensaje);
+      await interaction.channel.send({
+        content: mensaje,
+        allowedMentions: { parse: [] }
+      });
       await interaction.deleteReply();
       console.log(
         `💌 [${new Date().toISOString()}] Mensaje de ${interaction.user.tag} en #${interaction.channel.name}`

@@ -30,6 +30,8 @@ const CATEGORY_ADMIN = config.channels.admin;
 const TICKET_TTL_MS = 48 * 60 * 60 * 1000;
 const SWEEP_MS = 5 * 60 * 1000;
 const COUNTDOWN_MS = 60 * 1000;
+const COOLDOWN_MS = 60 * 60 * 1000;
+const MAX_LOG_ENTRIES = 1000;
 const EMBED_COLOR = 0xe77cae;
 
 const PANEL_TEXT =
@@ -53,12 +55,12 @@ const TICKET_TEXT = (username, expiresAt) =>
   `Tenés ${formatRemaining(expiresAt - Date.now())} para hacerlo, ` +
   "luego la solicitud se cerrará y deberás crear una nueva.";
 
-const REJECT_DM =
+const rejectDm = (retryAt) =>
   "❌ Tu solicitud de verificación a Operación Traviata fue rechazada. " +
-  "Podés crear una nueva desde el canal de verificación.";
-const EXPIRE_DM =
+  `Podés crear una nueva a partir de <t:${Math.floor(retryAt / 1000)}:R>.`;
+const expireDm = (retryAt) =>
   "⌛ Tu solicitud de verificación a Operación Traviata expiró después de 48 horas. " +
-  "Podés crear una nueva desde el canal de verificación.";
+  `Podés crear una nueva a partir de <t:${Math.floor(retryAt / 1000)}:R>.`;
 
 let state = loadState();
 let logs = loadLogs();
@@ -94,10 +96,21 @@ function loadState() {
     }
   }
 
+  const cooldowns = {};
+
+  if (raw?.cooldowns && typeof raw.cooldowns === "object" && !Array.isArray(raw.cooldowns)) {
+    for (const [userId, until] of Object.entries(raw.cooldowns)) {
+      if (/^\d{17,20}$/.test(userId) && Number.isFinite(until)) {
+        cooldowns[userId] = until;
+      }
+    }
+  }
+
   return {
     panelMessageId:
       typeof raw?.panelMessageId === "string" ? raw.panelMessageId : null,
-    tickets
+    tickets,
+    cooldowns
   };
 }
 
@@ -227,6 +240,38 @@ function removeTicket(channelId) {
   return true;
 }
 
+function setCooldown(userId) {
+  state.cooldowns[userId] = Date.now() + COOLDOWN_MS;
+  saveState();
+}
+
+function cooldownFor(userId) {
+  const until = state.cooldowns[userId];
+  return Number.isFinite(until) && until > Date.now() ? until : null;
+}
+
+function cleanupCooldowns() {
+  const now = Date.now();
+  let changed = false;
+
+  for (const [userId, until] of Object.entries(state.cooldowns)) {
+    if (until <= now) {
+      delete state.cooldowns[userId];
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    try {
+      saveState();
+    } catch (err) {
+      console.error(`${TAG} ⚠️ no pude guardar el estado: ${err.message}`);
+    }
+  }
+
+  return changed;
+}
+
 function expectRoleChange(userId) {
   expectedRoleChanges.add(userId);
   const timer = setTimeout(() => {
@@ -259,6 +304,10 @@ function logVerification({ action, method, actor = null, target = null, channelI
   };
 
   logs.push(entry);
+
+  if (logs.length > MAX_LOG_ENTRIES) {
+    logs.splice(0, logs.length - MAX_LOG_ENTRIES);
+  }
 
   try {
     LOG_STORE.save(logs);
@@ -332,7 +381,10 @@ async function sendExpiryNotice(client, ticket) {
 
   if (!user) return;
 
-  await user.send({ content: EXPIRE_DM }).catch((err) => {
+  const retryAt =
+    cooldownFor(ticket.userId) ?? Date.now() + COOLDOWN_MS;
+
+  await user.send({ content: expireDm(retryAt) }).catch((err) => {
     console.error(
       `${TAG} ⚠️ no pude avisar por DM a ${ticket.userTag}: ${err.message}`
     );
@@ -368,6 +420,7 @@ async function expireTickets(client) {
     }
 
     removeTicket(channelId);
+    setCooldown(ticket.userId);
     await sendExpiryNotice(client, ticket);
 
     logVerification({
@@ -380,6 +433,7 @@ async function expireTickets(client) {
 }
 
 const sweep = singleFlight(async (client) => {
+  cleanupCooldowns();
   await expireTickets(client);
   await ensurePanel(client);
 });
@@ -401,6 +455,16 @@ async function openTicket(interaction) {
 
   if (member.roles.cache.has(VERIFIED_ROLE)) {
     await respond(interaction, "ℹ️ Ya estás verificade.");
+    return;
+  }
+
+  const cooldownUntil = cooldownFor(user.id);
+
+  if (cooldownUntil) {
+    await respond(
+      interaction,
+      `⏳ Podrás crear otra solicitud el <t:${Math.floor(cooldownUntil / 1000)}:R>.`
+    );
     return;
   }
 
@@ -695,7 +759,9 @@ async function rejectTicket(interaction, channelId) {
     });
 
   if (user) {
-    await user.send({ content: REJECT_DM }).catch((err) => {
+    setCooldown(ticket.userId);
+    const retryAt = cooldownFor(ticket.userId) ?? Date.now() + COOLDOWN_MS;
+    await user.send({ content: rejectDm(retryAt) }).catch((err) => {
       console.error(
         `${TAG} ⚠️ no pude avisar por DM a ${ticket.userTag}: ${err.message}`
       );
@@ -753,6 +819,7 @@ async function cancelTicket(interaction, channelId) {
     channelId: ticket.channelId
   });
 
+  setCooldown(ticket.userId);
   await respond(interaction, "❌ Solicitud cancelada.");
   removeTicket(ticket.channelId);
 

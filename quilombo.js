@@ -5,13 +5,13 @@ const {
   EmbedBuilder
 } = require("discord.js");
 const store = require("./store");
-const { channels } = require("./config");
+const { channels, roles } = require("./config");
 const { getTextChannel, timestamp } = require("./utils/discord");
 const { hasAnyRole } = require("./utils/permissions");
 
 const TAG = "💥 [quilombo]";
 const ANNOUNCE_CHANNEL_ID = channels.quilombo;
-const RESET_ROLES = ["1527108970857234595", "1527108969741422672"];
+const RESET_ROLES = [roles.admin500kg, roles.admin200kg];
 const STORE = store.create("quilombo.json", TAG);
 
 let state = { chats: {} };

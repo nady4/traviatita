@@ -38,7 +38,10 @@ module.exports = {
 
     let message;
     try {
-      message = await interaction.channel.send(mensaje);
+      message = await interaction.channel.send({
+        content: mensaje,
+        allowedMentions: { parse: [] }
+      });
     } catch (error) {
       console.error(
         "🐦 [traviatweet] ⚠️ no pude enviar el mensaje:",
