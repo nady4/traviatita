@@ -131,7 +131,7 @@ function sanitizeUsername(username, fallbackId) {
 function panelPayload() {
   const embed = new EmbedBuilder()
     .setColor(EMBED_COLOR)
-    .setDescription(quote(PANEL_TEXT));
+    .setDescription(PANEL_TEXT);
 
   return {
     content: "",
