@@ -45,6 +45,8 @@ module.exports = {
     bot: snowflake("ROLE_BOT_ID"),
     admin200kg: snowflake("ROLE_200KG_ID"),
     verificade: snowflake("ROLE_VERIFICADE_ID"),
+    preso: snowflake("ROLE_PRESO_ID"),
+    cuck: snowflake("ROLE_CUCK_ID"),
     otokonoko: snowflake("ROLE_OTOKONOKO_ID"),
     astrovials: snowflake("ROLE_ASTROVIALS_ID")
   },
@@ -52,7 +54,8 @@ module.exports = {
     quilombo: snowflake("CHANNEL_ANNOUNCE_QUILOMBO_ID"),
     stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID"),
     general: snowflake("CHANNEL_GENERAL_ID"),
-    verificacion: snowflake("CHANNEL_VERIFICACION_ID")
+    verificacion: snowflake("CHANNEL_VERIFICACION_ID"),
+    preso: snowflake("CHANNEL_PRESO_ID")
   },
   tweetUserId: snowflake("TWEET_USER_ID"),
   tweetCheckMinutes: positiveInt("TWEET_CHECK_MINUTES"),
