@@ -105,7 +105,6 @@ function stockLine(label, store, products) {
 function buildEmbed(guild, stats) {
   const streak = quilombo.get(guild.id);
   const movement = miembros.summary();
-  const unverified = Math.max(0, stats.humans - stats.verificade);
   const owner = guild.ownerId;
 
   return new EmbedBuilder()
@@ -130,7 +129,6 @@ function buildEmbed(guild, stats) {
         value:
           `🏳️‍⚧️ Traviatenses: **${numberFmt.format(stats.traviatense)}**\n` +
           `✅ Verificades: **${numberFmt.format(stats.verificade)}**\n` +
-          `🙈 Sin verificar: **${numberFmt.format(unverified)}**\n` +
           `🔒 Presos: **${numberFmt.format(stats.preso)}**\n` +
           `🐂 Cucks: **${numberFmt.format(stats.cuck)}**\n` +
           `💊 Suscriptes Otokonoko: **${numberFmt.format(stats.otokonoko)}**\n` +
