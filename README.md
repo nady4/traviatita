@@ -102,7 +102,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CATEGORY_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
 
-La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario puede cancelarla; el owner y el staff pueden aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
+La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario, el owner y el staff pueden cancelarla; el owner y el staff pueden aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
 
 Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Los tickets vencen a las 48 horas; el mensaje muestra el tiempo restante y la fecha de vencimiento. El bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
 

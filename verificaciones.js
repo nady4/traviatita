@@ -734,10 +734,10 @@ async function cancelTicket(interaction, channelId) {
     return;
   }
 
-  if (ticket.userId !== interaction.user.id) {
+  if (ticket.userId !== interaction.user.id && !isStaff(interaction)) {
     await respond(
       interaction,
-      "🚫 Solo quien abrió la solicitud puede cancelarla."
+      "🚫 Solo quien abrió la solicitud o el staff pueden cancelarla."
     );
     return;
   }
