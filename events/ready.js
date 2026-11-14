@@ -3,6 +3,7 @@ const otokonoko = require("../otokonoko");
 const astrovials = require("../astrovials");
 const resumenes = require("../resumenes");
 const hormonas = require("../hormonas");
+const miembros = require("../miembros");
 const travestir = require("../travestir");
 const verificar = require("../verificar");
 const tweets = require("../tweets");
@@ -17,6 +18,7 @@ module.exports = {
     astrovials.start(client);
     resumenes.start(client);
     hormonas.start(client);
+    miembros.start(client);
     travestir.start(client);
     verificar.start(client);
     tweets.start(client);

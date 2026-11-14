@@ -86,7 +86,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | ⏳ `/dias`           | Registra la fecha de inicio de HRT y muestra el tiempo transcurrido.                                      |
 | 💥 `/quilombo`       | Cuenta los días sin quilombos; incluye un botón para reiniciar la cuenta (solo roles autorizados).        |
 | 🎲 `/dado`           | Tira dados d3–d100, un dX personalizado o un número al azar en un rango.                                  |
-| 📊 `/stats`          | Muestra miembros, roles, stock, racha sin quilombos, tweets pendientes y uptime del bot.                   |
+| 📊 `/stats`          | Muestra miembros, roles, altas y bajas, stock, racha sin quilombos, tweets pendientes y uptime del bot.     |
 | 🏳️‍⚧️ `/travestir`      | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg).                              |
 | ✅ `/verificar <usuario>` | Verifica a un miembro con el rol verificade y anuncia en el canal general que ya tiene acceso a los canales NSFW (solo rol 200kg). |
 | 🔒 `/enjaular <usuario>` | Quita los roles traviatense y verificade, asigna el rol preso, anuncia en general y da la bienvenida en el canal de presos (solo rol 200kg). |
@@ -105,7 +105,9 @@ La detección se hace leyendo el HTML público del perfil, sin API key. Si el te
 
 ## 💾 Persistencia
 
-El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+
+El seguimiento de entradas y salidas de miembros empieza a contar desde que se inicia esta versión del bot; no reconstruye el historial anterior.
 
 <br>
 
@@ -159,6 +161,7 @@ hormonas.js              Recordatorios de hormonas por DM
 dias.js                  Contador de días de HRT
 quilombo.js              Contador de días sin quilombos
 dado.js                  Tiradas de dados
+miembros.js              Seguimiento diario de entradas y salidas de miembros
 travestir.js             Asignación del rol traviatense
 verificar.js             Asignación del rol verificade y anuncio en el canal general
 tweets.js                Detección de tweets publicados y respuesta en el canal

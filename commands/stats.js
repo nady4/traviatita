@@ -6,6 +6,7 @@ const {
 const { roles } = require("../config");
 const { create } = require("../store");
 const quilombo = require("../quilombo");
+const miembros = require("../miembros");
 const { PRODUCTS: OTOKONOKO_PRODUCTS } = require("../otokonoko");
 const { PRODUCTS: ASTROVIALS_PRODUCTS } = require("../astrovials");
 const { timestamp } = require("../utils/discord");
@@ -68,6 +69,19 @@ async function memberStats(guild) {
   return data;
 }
 
+function fmtBalance(joins, leaves) {
+  const balance = joins - leaves;
+  return `${balance > 0 ? "+" : ""}${numberFmt.format(balance)}`;
+}
+
+function movementLine(label, counts) {
+  return (
+    `${label}: **${numberFmt.format(counts.joins)}** entraron · ` +
+    `**${numberFmt.format(counts.leaves)}** salieron · ` +
+    `balance **${fmtBalance(counts.joins, counts.leaves)}**`
+  );
+}
+
 function stockLine(label, store, products) {
   const raw = store.load({});
   const inStock = products.filter(
@@ -80,6 +94,7 @@ function stockLine(label, store, products) {
 function buildEmbed(guild, stats, client) {
   const pendingTweets = (TWEETS.load({}).pending ?? []).length;
   const streak = quilombo.get(guild.id);
+  const movement = miembros.summary();
   const unverified = Math.max(0, stats.humans - stats.verificade);
   const ping = Math.round(client.ws.ping);
 
@@ -103,6 +118,14 @@ function buildEmbed(guild, stats, client) {
           `🐂 Cucks: **${numberFmt.format(stats.cuck)}**\n` +
           `💊 Suscriptes Otokonoko: **${numberFmt.format(stats.otokonoko)}**\n` +
           `🚀 Suscriptes Astrovials: **${numberFmt.format(stats.astrovials)}**`
+      },
+      {
+        name: "🚪 Movimiento de miembros",
+        value: [
+          movementLine("Hoy", movement.today),
+          movementLine("Esta semana", movement.week),
+          movementLine("Este mes", movement.month)
+        ].join("\n")
       },
       {
         name: "📡 Estado",
