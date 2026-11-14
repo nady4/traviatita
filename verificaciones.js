@@ -18,12 +18,17 @@ const STATE = store.create("verificaciones.json", TAG);
 const LOG_STORE = store.create("verificaciones-log.json", TAG);
 
 const VERIFIED_ROLE = config.roles.verificade;
-const STAFF_ROLES = [config.roles.admin200kg, config.roles.admin120kg];
+const STAFF_ROLES = [
+  config.roles.admin500kg,
+  config.roles.admin200kg,
+  config.roles.admin120kg
+];
 const CHANNEL_VERIFICACION = config.channels.verificacion;
 const CHANNEL_ADMIN = config.channels.admin;
 
 const TICKET_TTL_MS = 48 * 60 * 60 * 1000;
 const SWEEP_MS = 5 * 60 * 1000;
+const COUNTDOWN_MS = 60 * 1000;
 
 const PANEL_TEXT =
   "Hacé click en el botón debajo para verificarte y poder acceder a los canales NSFW. " +
@@ -31,11 +36,19 @@ const PANEL_TEXT =
   "(censurá cualquier otra información) y EN LA MISMA IMAGEN algún papel que diga tu " +
   "username junto al nombre del servidor.";
 
-const TICKET_TEXT = (username) =>
+function formatRemaining(ms) {
+  const totalMinutes = Math.max(0, Math.ceil(ms / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+}
+
+const TICKET_TEXT = (username, expiresAt) =>
   `Hola ${username}! Para verificarte, vamos a necesitar una foto de alguna ` +
   "identificación que diga tu fecha de nacimiento (censurá cualquier otra información) " +
   "y EN LA MISMA IMAGEN algún papel que diga tu username junto al nombre del servidor. " +
-  "Tenés 48 horas para hacerlo, luego la solicitud se cerrará y deberás crear una nueva.";
+  `Tenés ${formatRemaining(expiresAt - Date.now())} para hacerlo ` +
+  `(vence ${timestamp(expiresAt, "R")}), luego la solicitud se cerrará y deberás crear una nueva.`;
 
 const REJECT_DM =
   "❌ Tu solicitud de verificación fue rechazada. " +
@@ -63,6 +76,14 @@ function loadState() {
         userId: ticket.userId,
         userTag:
           typeof ticket.userTag === "string" ? ticket.userTag : ticket.userId,
+        username:
+          typeof ticket.username === "string"
+            ? ticket.username
+            : typeof ticket.userTag === "string"
+              ? ticket.userTag
+              : ticket.userId,
+        messageId:
+          typeof ticket.messageId === "string" ? ticket.messageId : null,
         guildId: typeof ticket.guildId === "string" ? ticket.guildId : null,
         createdAt: Number.isFinite(ticket.createdAt) ? ticket.createdAt : null,
         expiresAt: ticket.expiresAt
@@ -132,17 +153,30 @@ function ticketButtons(channelId) {
   );
 }
 
-function ticketPayload(user, channelId) {
-  const embed = new EmbedBuilder()
+function ticketEmbed(username, expiresAt) {
+  return new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle("Solicitud de verificación")
-    .setDescription(TICKET_TEXT(user.username));
+    .setDescription(TICKET_TEXT(username, expiresAt));
+}
 
+function ticketPayload(user, channelId, expiresAt) {
   return {
-    content: `<@${user.id}>`,
-    embeds: [embed],
+    content:
+      `<@${user.id}> ` +
+      `<@&${config.roles.admin500kg}> ` +
+      `<@&${config.roles.admin200kg}> ` +
+      `<@&${config.roles.admin120kg}>`,
+    embeds: [ticketEmbed(user.username, expiresAt)],
     components: [ticketButtons(channelId)],
-    allowedMentions: { users: [user.id] }
+    allowedMentions: {
+      users: [user.id],
+      roles: [
+        config.roles.admin500kg,
+        config.roles.admin200kg,
+        config.roles.admin120kg
+      ]
+    }
   };
 }
 
@@ -453,14 +487,9 @@ async function openTicket(interaction) {
       id: user.id,
       allow: memberAllow
     });
-    overwrites.set(config.roles.admin200kg, {
-      id: config.roles.admin200kg,
-      allow: staffAllow
-    });
-    overwrites.set(config.roles.admin120kg, {
-      id: config.roles.admin120kg,
-      allow: staffAllow
-    });
+    for (const roleId of STAFF_ROLES) {
+      overwrites.set(roleId, { id: roleId, allow: staffAllow });
+    }
     overwrites.set(guild.ownerId, {
       id: guild.ownerId,
       allow: staffAllow
@@ -484,6 +513,8 @@ async function openTicket(interaction) {
     const ticket = {
       userId: user.id,
       userTag: user.tag,
+      username: user.username,
+      messageId: null,
       guildId: guild.id,
       createdAt: now,
       expiresAt
@@ -492,7 +523,11 @@ async function openTicket(interaction) {
     try {
       state.tickets[channel.id] = ticket;
       saveState();
-      await channel.send(ticketPayload(user, channel.id));
+      const message = await channel.send(
+        ticketPayload(user, channel.id, expiresAt)
+      );
+      ticket.messageId = message.id;
+      saveState();
     } catch (err) {
       delete state.tickets[channel.id];
 
@@ -533,7 +568,7 @@ async function acceptTicket(interaction, channelId) {
   if (!isStaff(interaction)) {
     await respond(
       interaction,
-      "🚫 Solo el owner, 200kg o 120kg pueden aceptar solicitudes."
+      "🚫 Sólo la owner y el staff pueden aceptar solicitudes."
     );
     return;
   }
@@ -620,7 +655,7 @@ async function rejectTicket(interaction, channelId) {
   if (!isStaff(interaction)) {
     await respond(
       interaction,
-      "🚫 Solo el owner, 200kg o 120kg pueden rechazar solicitudes."
+      "🚫 Sólo la owner y el staff pueden rechazar solicitudes."
     );
     return;
   }
@@ -714,6 +749,61 @@ async function cancelTicket(interaction, channelId) {
   }
 }
 
+const refreshTicketCountdowns = singleFlight(async (client) => {
+  const now = Date.now();
+
+  for (const [channelId, ticket] of Object.entries(state.tickets)) {
+    if (ticket.expiresAt <= now) continue;
+
+    try {
+      const channel = await client.channels.fetch(channelId);
+      if (!channel?.isTextBased()) continue;
+
+      let message = null;
+
+      if (ticket.messageId) {
+        message = await channel.messages.fetch(ticket.messageId).catch((err) => {
+          if (err.code === 10008) return null;
+          throw err;
+        });
+      }
+
+      if (!message) {
+        const recent = await channel.messages.fetch({ limit: 20 });
+        message = recent.find(
+          (candidate) =>
+            candidate.author.id === client.user.id &&
+            candidate.embeds.some(
+              (embed) => embed.title === "Solicitud de verificación"
+            )
+        );
+
+        if (!message) continue;
+
+        ticket.messageId = message.id;
+
+        try {
+          saveState();
+        } catch (err) {
+          console.error(`${TAG} ⚠️ no pude guardar el estado: ${err.message}`);
+        }
+      }
+
+      await message.edit({
+        embeds: [
+          ticketEmbed(ticket.username ?? ticket.userTag, ticket.expiresAt)
+        ]
+      });
+    } catch (err) {
+      if (err.code === 10003) continue;
+
+      console.error(
+        `${TAG} ⚠️ no pude actualizar el contador de ${channelId}: ${err.message}`
+      );
+    }
+  }
+});
+
 function start(client) {
   client.on("channelDelete", (channel) => {
     try {
@@ -727,13 +817,26 @@ function start(client) {
     console.error(`${TAG} ⚠️ error en el barrido inicial: ${err.message}`);
   });
 
+  refreshTicketCountdowns(client).catch((err) => {
+    console.error(`${TAG} ⚠️ error al actualizar contadores: ${err.message}`);
+  });
+
   const timer = setInterval(() => {
     sweep(client).catch((err) => {
       console.error(`${TAG} ⚠️ error en el barrido: ${err.message}`);
     });
   }, SWEEP_MS);
 
+  const countdownTimer = setInterval(() => {
+    refreshTicketCountdowns(client).catch((err) => {
+      console.error(
+        `${TAG} ⚠️ error al actualizar contadores: ${err.message}`
+      );
+    });
+  }, COUNTDOWN_MS);
+
   timer.unref?.();
+  countdownTimer.unref?.();
   console.log(`${TAG} ✅ panel y tickets de verificación activos`);
 }
 

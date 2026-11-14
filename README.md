@@ -52,6 +52,7 @@ npm run dev
 | `STATE_DIR`                    | ➖ No       | Carpeta donde se guardan los JSON de estado. Si no se define, se usa el directorio del proyecto. |
 | `ROLE_TRAVIATENSE_ID`          | ✅ Sí       | Rol que asigna `/travestir` y que reciben los nuevos miembros.                                   |
 | `ROLE_BOT_ID`                  | ✅ Sí       | Rol de bots, excluido de `/travestir`.                                                           |
+| `ROLE_500KG_ID`                | ✅ Sí       | Rol 500kg que se menciona en las solicitudes de verificación y puede gestionarlas.                |
 | `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir`, `/verificar`, `/enjaular` y `/cuckear`.                   |
 | `ROLE_120KG_ID`                | ✅ Sí       | Rol 120kg que se lista en los roles del staff dentro de `/stats`.                                 |
 | `ROLE_VERIFICADE_ID`           | ✅ Sí       | Rol que asignan `/verificar` y las solicitudes aceptadas, y que da acceso a los canales NSFW.    |
@@ -99,11 +100,11 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 ## 🪪 Verificación por ticket
 
-El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CHANNEL_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 200kg/120kg y el bot.
+El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CHANNEL_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
 
-La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario puede cancelarla; el staff puede aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
+La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario puede cancelarla; el owner y el staff pueden aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
 
-Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Los tickets vencen a las 48 horas; el bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
+Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Los tickets vencen a las 48 horas; el mensaje muestra el tiempo restante y la fecha de vencimiento. El bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
 
 <br>
 
