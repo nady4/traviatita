@@ -1,5 +1,11 @@
 const config = require("../config");
 
+const STAFF_ROLES = [
+  config.roles.admin500kg,
+  config.roles.admin200kg,
+  config.roles.admin120kg
+];
+
 function roleCache(interaction) {
   if (!interaction.inGuild()) return null;
   return interaction.member?.roles?.cache ?? null;
@@ -13,6 +19,15 @@ function hasRole(interaction, roleId) {
 function hasAnyRole(interaction, roleIds) {
   const cache = roleCache(interaction);
   return !!cache && roleIds.some((id) => cache.has(id));
+}
+
+function isStaff(interaction) {
+  if (!interaction.inGuild()) return false;
+
+  return (
+    interaction.guild.ownerId === interaction.user.id ||
+    hasAnyRole(interaction, STAFF_ROLES)
+  );
 }
 
 function canPunish(interaction, member) {
@@ -30,4 +45,4 @@ function canPunish(interaction, member) {
   );
 }
 
-module.exports = { hasRole, hasAnyRole, canPunish };
+module.exports = { hasRole, hasAnyRole, isStaff, canPunish };

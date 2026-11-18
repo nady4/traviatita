@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const verificar = require("../verificar");
 const verificaciones = require("../verificaciones");
+const { defineCommand } = require("../utils/command");
 
-module.exports = {
+module.exports = defineCommand({
   data: new SlashCommandBuilder()
     .setName("verificar")
     .setDescription("✅ Verifica a un miembro y le da acceso a los canales NSFW")
@@ -13,24 +14,11 @@ module.exports = {
         .setRequired(true)
     ),
 
-  async execute(interaction) {
-    if (!interaction.inGuild()) {
-      await interaction.reply({
-        content: "Este comando solo sirve dentro de un servidor.",
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+  guildOnly: true,
+  roles: [verificar.ROLE_200KG],
+  roleMessage: "🚫 Solo quienes tienen el rol 200kg pueden usar este comando.",
 
-    if (!verificar.canUse(interaction)) {
-      await interaction.reply({
-        content:
-          "🚫 Solo quienes tienen el rol 200kg pueden usar este comando.",
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-
+  async run(interaction) {
     const member = interaction.options.getMember("usuario");
     if (!member) {
       await interaction.reply({
@@ -97,4 +85,4 @@ module.exports = {
       `✅ Verificaste a <@${member.id}>. El anuncio se publicó en <#${verificar.CHANNEL_GENERAL}>.`
     );
   }
-};
+});

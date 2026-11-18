@@ -1,35 +1,18 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  MessageFlags
-} = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { roles } = require("../config");
-const { create } = require("../store");
 const quilombo = require("../quilombo");
 const miembros = require("../miembros");
-const { PRODUCTS: OTOKONOKO_PRODUCTS } = require("../otokonoko");
-const { PRODUCTS: ASTROVIALS_PRODUCTS } = require("../astrovials");
+const otokonoko = require("../otokonoko");
+const astrovials = require("../astrovials");
 const { timestamp } = require("../utils/discord");
+const { defineCommand } = require("../utils/command");
 
 const TAG = "📊 [stats]";
 const CACHE_MS = 60_000;
 const SECTION_GAP = "\n\u200b";
 
-const STOCK = create("stock.json", TAG);
-const ASTRO = create("astro.json", TAG);
-
 const memberCache = new Map();
 const numberFmt = new Intl.NumberFormat("es-AR");
-
-function fmtDuration(ms) {
-  const minutes = Math.max(0, Math.floor(ms / 60_000));
-  const days = Math.floor(minutes / 1440);
-  const hours = Math.floor((minutes % 1440) / 60);
-  const mins = minutes % 60;
-  if (days) return `${days}d ${hours}h`;
-  if (hours) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-}
 
 async function memberStats(guild) {
   const cached = memberCache.get(guild.id);
@@ -93,13 +76,19 @@ function movementLine(label, counts) {
   );
 }
 
-function stockLine(label, store, products) {
-  const raw = store.load({});
+function stockLine(label, snapshot, products) {
   const inStock = products.filter(
-    (product) => raw.products?.[product.slug]?.inStock
+    (product) => snapshot.products?.[product.slug]?.inStock
   ).length;
-  const check = raw.lastCheck ? timestamp(raw.lastCheck) : "nunca";
+  const check = snapshot.lastCheck ? timestamp(snapshot.lastCheck) : "nunca";
   return `${label}: **${inStock}/${products.length}** en stock · chequeo ${check}`;
+}
+
+function streakLine(streak) {
+  const ts = streak ? Date.parse(streak.ts) : NaN;
+  if (!Number.isFinite(ts)) return "sin datos";
+  const unix = Math.floor(ts / 1000);
+  return `<t:${unix}:R> (desde <t:${unix}:f>)`;
 }
 
 function buildEmbed(guild, stats) {
@@ -122,7 +111,7 @@ function buildEmbed(guild, stats) {
       },
       {
         name: "\u200b",
-        value: `💥 Racha sin quilombos: **${streak ? fmtDuration(Date.now() - Date.parse(streak.ts)) : "sin datos"}**${SECTION_GAP}`
+        value: `💥 Racha sin quilombos: **${streakLine(streak)}**${SECTION_GAP}`
       },
       {
         name: "🏷️ Roles",
@@ -145,27 +134,21 @@ function buildEmbed(guild, stats) {
       {
         name: "📦 Stock",
         value:
-          `${stockLine("💊 Otokonoko", STOCK, OTOKONOKO_PRODUCTS)}\n` +
-          `${stockLine("🚀 Astrovials", ASTRO, ASTROVIALS_PRODUCTS)}`
+          `${stockLine("💊 Otokonoko", otokonoko.getProductState(), otokonoko.PRODUCTS)}\n` +
+          `${stockLine("🚀 Astrovials", astrovials.getProductState(), astrovials.PRODUCTS)}`
       }
     )
     .setTimestamp();
 }
 
-module.exports = {
+module.exports = defineCommand({
   data: new SlashCommandBuilder()
     .setName("stats")
     .setDescription("📊 Estadísticas y estado del servidor"),
 
-  async execute(interaction) {
-    if (!interaction.inGuild()) {
-      await interaction.reply({
-        content: "Este comando solo sirve dentro de un servidor.",
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
+  guildOnly: true,
 
+  async run(interaction) {
     await interaction.deferReply();
     try {
       const stats = await memberStats(interaction.guild);
@@ -177,4 +160,4 @@ module.exports = {
       await interaction.editReply("❌ No pude calcular las estadísticas.");
     }
   }
-};
+});

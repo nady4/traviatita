@@ -1,6 +1,8 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { create } = require('./store');
 const { timestamp } = require('./utils/discord');
+const { singleFlight } = require('./utils/async');
+const { every } = require('./utils/schedule');
 
 const TAG = '⏰ [hormonas]';
 
@@ -134,10 +136,10 @@ async function tick(client) {
   if (changed) saveState();
 }
 
+const tickOnce = singleFlight(tick);
+
 function start(client) {
-  const run = () => tick(client).catch((err) => console.error(`${TAG} ⚠️ tick:`, err.message));
-  setTimeout(run, 5_000);
-  setInterval(run, 60_000);
+  every(60_000, () => tickOnce(client), { first: 5_000, label: TAG }).unref?.();
   const n = Object.keys(state.users).length;
   console.log(`${TAG} ✅ tick cada 60 s · ${n === 0 ? 'sin recordatorios' : `${n} recordatorio${n === 1 ? '' : 's'}`}`);
 }

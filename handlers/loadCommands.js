@@ -1,16 +1,17 @@
-const fs = require("fs");
 const path = require("path");
 const { Collection } = require("discord.js");
+const { loadModules } = require("./loadModules");
 
 function loadCommands() {
   const commands = new Collection();
   const dir = path.join(__dirname, "..", "commands");
+  const loaded = loadModules(
+    dir,
+    (command) => command.data && command.execute,
+    "Comando"
+  );
 
-  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".js"))) {
-    const command = require(path.join(dir, file));
-    if (!command.data || !command.execute) {
-      throw new Error(`Comando inválido: ${file}`);
-    }
+  for (const command of loaded) {
     commands.set(command.data.name, command);
   }
 

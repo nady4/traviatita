@@ -18,7 +18,16 @@ let state = { chats: {} };
 
 function loadState() {
   const raw = STORE.load({ chats: {} });
-  state = { chats: raw.chats ?? {} };
+  const chats = {};
+
+  for (const [key, record] of Object.entries(raw.chats ?? {})) {
+    const iso =
+      record?.ts ?? (record?.date ? `${record.date}T12:00:00.000Z` : null);
+    if (typeof iso !== "string" || !Number.isFinite(Date.parse(iso))) continue;
+    chats[key] = { ts: new Date(iso).toISOString() };
+  }
+
+  state = { chats };
 }
 
 function saveState() {
@@ -26,10 +35,8 @@ function saveState() {
 }
 
 function get(key) {
-  const r = state.chats[key];
-  if (!r) return null;
-  const iso = r.ts ?? (r.date ? `${r.date}T12:00:00.000Z` : null);
-  return iso ? { ts: iso } : null;
+  const record = state.chats[key];
+  return record ? { ts: record.ts } : null;
 }
 
 function set(key, date = new Date()) {
@@ -66,16 +73,18 @@ function canReset(interaction) {
   return hasAnyRole(interaction, RESET_ROLES);
 }
 
-function buildView(key) {
-  if (!get(key)) {
-    set(key);
+function buildView(key, { fresh = false } = {}) {
+  const current = get(key);
+
+  if (!current || fresh) {
     return {
       content:
         "🕊️ Arranca la cuenta: **0 horas** sin quilombos. Si se arma uno, apretá el botón y la cuenta vuelve a cero.",
       components: [row()]
     };
   }
-  const start = new Date(get(key).ts);
+
+  const start = new Date(current.ts);
   const { days, hours } = elapsed(start);
   return {
     content: `Llevamos ${fmt(days, hours)} sin quilombos desde el ${timestamp(start, "f")}. Que dure 🕊️`,

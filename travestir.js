@@ -22,6 +22,8 @@ async function assignAll(guild) {
   let skipped = 0;
   let failed = 0;
 
+  const targets = [];
+
   for (const member of members.values()) {
     if (excluded(member)) {
       skipped++;
@@ -31,13 +33,28 @@ async function assignAll(guild) {
       already++;
       continue;
     }
-    try {
-      await member.roles.add(ROLE_TRAVIATENSE, "Comando /travestir");
-      added++;
-    } catch (err) {
+    targets.push(member);
+  }
+
+  for (let i = 0; i < targets.length; i += 10) {
+    const batch = targets.slice(i, i + 10);
+    const results = await Promise.allSettled(
+      batch.map((member) =>
+        member.roles.add(ROLE_TRAVIATENSE, "Comando /travestir")
+      )
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        added++;
+        return;
+      }
+
       failed++;
-      console.error(`${TAG} ⚠️ ${member.user.tag}: ${err.message}`);
-    }
+      console.error(
+        `${TAG} ⚠️ ${batch[index].user.tag}: ${result.reason?.message ?? result.reason}`
+      );
+    });
   }
 
   console.log(

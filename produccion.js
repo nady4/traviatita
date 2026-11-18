@@ -5,6 +5,7 @@ const TAG = '📦 [produccion]';
 const STORE = create('produccion.json', TAG);
 
 let state = loadState();
+let dirty = false;
 
 function loadState() {
   const raw = STORE.load({});
@@ -27,7 +28,13 @@ function loadState() {
 }
 
 function saveState() {
+  if (!dirty) return;
   STORE.save(state);
+  dirty = false;
+}
+
+function flush() {
+  saveState();
 }
 
 function add(store, date, slug, qty) {
@@ -36,7 +43,7 @@ function add(store, date, slug, qty) {
   const days = (state[store] ??= {});
   const counts = (days[date] ??= {});
   counts[slug] = (counts[slug] ?? 0) + n;
-  saveState();
+  dirty = true;
   return counts[slug];
 }
 
@@ -46,7 +53,7 @@ function addExit(store, date, slug, qty) {
   const days = (state.exits[store] ??= {});
   const counts = (days[date] ??= {});
   counts[slug] = (counts[slug] ?? 0) + n;
-  saveState();
+  dirty = true;
   return counts[slug];
 }
 
@@ -63,7 +70,8 @@ function mergeMax(store, date, counts) {
       changed = true;
     }
   }
-  if (changed) saveState();
+  if (changed) dirty = true;
+  return;
 }
 
 function day(store, date) {
@@ -95,7 +103,7 @@ function markInStock(store, slug, sinceIso, fallbackIso) {
       ? fallbackIso
       : sinceIso;
   periods[slug] = { since };
-  saveState();
+  dirty = true;
 }
 
 function markOutOfStock(store, slug, endIso, weekKey, fallbackIso) {
@@ -103,15 +111,14 @@ function markOutOfStock(store, slug, endIso, weekKey, fallbackIso) {
   const periods = (state.inStockSince[store] ??= {});
   const sinceIso = periods[slug]?.since ?? fallbackIso;
   delete periods[slug];
+  dirty = true;
   if (!sinceIso) {
-    saveState();
     return null;
   }
 
   const start = Date.parse(sinceIso);
   const end = Date.parse(endIso);
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-    saveState();
     return null;
   }
 
@@ -136,7 +143,6 @@ function markOutOfStock(store, slug, endIso, weekKey, fallbackIso) {
   week.episodes += 1;
   week.averageMs = Math.round(week.totalMs / week.episodes);
 
-  saveState();
   return { ms, weekKey, averageMs: product.averageMs, weekAverageMs: week.averageMs };
 }
 
@@ -154,4 +160,5 @@ module.exports = {
   markInStock,
   markOutOfStock,
   duration,
+  flush,
 };

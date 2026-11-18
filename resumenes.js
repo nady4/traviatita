@@ -65,7 +65,7 @@ async function announceDaily(client, date) {
   const total = totalOf(ASTROVIALS_PRODUCTS, totals);
   if (total <= 0) {
     console.log(`${TAG} 📊 sin viales de Astrovials el ${cal.fmtDate(date)}, no anuncio el resumen diario`);
-    return;
+    return "empty";
   }
   const embed = new EmbedBuilder()
     .setColor(0x3498db)
@@ -75,7 +75,10 @@ async function announceDaily(client, date) {
     .setFooter({ text: `Total: ${total} ${plural(total)}` });
   if (await sendEmbed(client, embed, `el resumen diario del ${cal.fmtDate(date)}`)) {
     console.log(`${TAG} 📊 resumen diario del ${cal.fmtDate(date)} anunciado (${total} ${plural(total)})`);
+    return "sent";
   }
+
+  return "error";
 }
 
 async function announceWeekly(client, sunday) {
@@ -85,7 +88,7 @@ async function announceWeekly(client, sunday) {
   const total = totalOf(ASTROVIALS_PRODUCTS, astro) + totalOf(OTOKONOKO_PRODUCTS, otk);
   if (total <= 0) {
     console.log(`${TAG} 📊 sin viales del ${cal.fmtDate(start)} al ${cal.fmtDate(end)}, no anuncio el resumen semanal`);
-    return;
+    return "empty";
   }
   const embed = new EmbedBuilder()
     .setColor(0x9b59b6)
@@ -96,7 +99,10 @@ async function announceWeekly(client, sunday) {
     .setFooter({ text: `Total: ${total} ${plural(total)}` });
   if (await sendEmbed(client, embed, `el resumen semanal del ${cal.fmtDate(end)}`)) {
     console.log(`${TAG} 📊 resumen semanal del ${cal.fmtDate(start)} al ${cal.fmtDate(end)} anunciado (${total} ${plural(total)})`);
+    return "sent";
   }
+
+  return "error";
 }
 
 async function announceMonthly(client, month) {
@@ -106,7 +112,7 @@ async function announceMonthly(client, month) {
   const total = totalOf(ASTROVIALS_PRODUCTS, astro) + totalOf(OTOKONOKO_PRODUCTS, otk);
   if (total <= 0) {
     console.log(`${TAG} 📊 sin viales en ${cal.fmtMonth(month)}, no anuncio el resumen mensual`);
-    return;
+    return "empty";
   }
   const embed = new EmbedBuilder()
     .setColor(0xe67e22)
@@ -117,55 +123,81 @@ async function announceMonthly(client, month) {
     .setFooter({ text: `Total: ${total} ${plural(total)}` });
   if (await sendEmbed(client, embed, `el resumen mensual de ${cal.fmtMonth(month)}`)) {
     console.log(`${TAG} 📊 resumen mensual de ${cal.fmtMonth(month)} anunciado (${total} ${plural(total)})`);
+    return "sent";
   }
+
+  return "error";
 }
 
 async function runSummariesOnce(client, now) {
   const today = cal.dateKey(now);
   const yesterday = cal.addDays(today, -1);
+  let ok = true;
 
   if (state.daily !== yesterday) {
-    await announceDaily(client, yesterday);
-    state.daily = yesterday;
-    saveState();
+    const result = await announceDaily(client, yesterday);
+
+    if (result === "error") {
+      ok = false;
+    } else {
+      state.daily = yesterday;
+      saveState();
+    }
   }
 
   const sunday = cal.lastCompletedSunday(today);
   if (state.weekly !== sunday) {
-    await announceWeekly(client, sunday);
-    state.weekly = sunday;
-    saveState();
+    const result = await announceWeekly(client, sunday);
+
+    if (result === "error") {
+      ok = false;
+    } else {
+      state.weekly = sunday;
+      saveState();
+    }
   }
 
   const month = cal.previousMonthKey(today);
   if (state.monthly !== month) {
-    await announceMonthly(client, month);
-    state.monthly = month;
-    saveState();
+    const result = await announceMonthly(client, month);
+
+    if (result === "error") {
+      ok = false;
+    } else {
+      state.monthly = month;
+      saveState();
+    }
   }
+
+  return ok;
 }
 
 const runSummaries = singleFlight(runSummariesOnce);
 
-function schedule(client) {
-  const delay = cal.msUntilNextMidnight() + 1000;
+const RETRY_MS = 30 * 60_000;
+
+function runAndSchedule(client, delay) {
   setTimeout(async () => {
+    let ok = true;
+
     try {
-      await runSummaries(client);
+      ok = await runSummaries(client);
     } catch (err) {
       console.error(`${TAG} ⚠️ resúmenes:`, err.message);
-    } finally {
-      schedule(client);
+      ok = false;
     }
+
+    schedule(client, ok ? cal.msUntilNextMidnight() + 1000 : RETRY_MS);
   }, delay);
+}
+
+function schedule(client, delay = cal.msUntilNextMidnight() + 1000) {
+  runAndSchedule(client, delay);
   console.log(`${TAG} 🕛 resúmenes programados para dentro de ${cal.fmtAge(delay)} (${cal.timeZone})`);
 }
 
 function start(client) {
-  setTimeout(() => {
-    runSummaries(client).catch((err) => console.error(`${TAG} ⚠️ resúmenes:`, err.message));
-  }, 10_000);
-  schedule(client);
+  schedule(client, 10_000);
   console.log(`${TAG} ✅ resúmenes diario, semanal y mensual activos (${cal.timeZone})`);
 }
 

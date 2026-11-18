@@ -2,6 +2,7 @@ node_modules/
 .env
 stock.json
 astro.json
+anubis.json
 hormonas.json
 quilombo.json
 tweets.json

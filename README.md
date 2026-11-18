@@ -6,7 +6,7 @@ Bot de Discord para el servidor de <a href="https://discord.gg/zVAC3NBz43">Opera
 
 ## 📋 Requisitos
 
-- 🟢 **Node.js 18** o superior.
+- 🟢 **Node.js 20** o superior.
 - 🤖 Un bot de Discord con los intents **Guilds** y **GuildMembers** habilitados.
 - 🛡️ Permisos de **Gestionar roles**, **Gestionar canales**, **Enviar mensajes**, **Insertar enlaces** y **Leer historial de mensajes** en los canales de anuncios.
 - 🔺 El rol del bot debe estar por encima de los roles que asigna.
@@ -118,7 +118,7 @@ La detección se hace leyendo el HTML público del perfil, sin API key. Si el te
 
 ## 💾 Persistencia
 
-El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`, `verificaciones.json`, `verificaciones-log.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `anubis.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`, `verificaciones.json`, `verificaciones-log.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
 
 El seguimiento de entradas y salidas de miembros empieza a contar desde que se inicia esta versión del bot; no reconstruye el historial anterior.
 
@@ -149,6 +149,7 @@ deploy-commands.js       Registro de slash commands vía REST
 handlers/
   loadCommands.js        Carga dinámica de commands/
   loadEvents.js          Carga dinámica de events/
+  loadModules.js         Carga de módulos con validación compartida
 commands/                Un archivo por slash command ({ data, execute })
 interactions/            Handlers de botones y modales por prefijo de customId
 events/
@@ -158,6 +159,9 @@ ui/
   stockNotify.js         Botones compartidos de suscripción a stock
 utils/
   async.js               sleep y singleFlight para tareas concurrentes
+  command.js             Wrapper de comandos (guild, roles y handler)
+  punishments.js         Flujo compartido de castigos con roles
+  schedule.js            Temporizadores periódicos con manejo de errores
   discord.js             Timestamps, canales y anuncios compartidos
   html.js                Decodificación de entidades y HTML a texto
   http.js                User-Agent y fetch con timeout
@@ -167,6 +171,7 @@ utils/
 store.js                 Persistencia JSON con escritura atómica
 calendario.js            Helpers de fecha y zona horaria para los resúmenes
 produccion.js            Histórico diario de viales ingresados por tienda y producto
+stockTracker.js          Tracker genérico de stock (fetch, anuncios y estado)
 resumenes.js             Resúmenes diario, semanal y mensual de viales ingresados
 otokonoko.js             Tracker de stock de Otokonoko Pharmacy
 astrovials.js            Tracker de stock de Astrovials

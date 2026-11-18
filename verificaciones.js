@@ -12,7 +12,8 @@ const config = require("./config");
 const store = require("./store");
 const { singleFlight } = require("./utils/async");
 const { getTextChannel, timestamp } = require("./utils/discord");
-const { hasAnyRole } = require("./utils/permissions");
+const { isStaff } = require("./utils/permissions");
+const { every } = require("./utils/schedule");
 
 const TAG = "🪪 [verificaciones]";
 const STATE = store.create("verificaciones.json", TAG);
@@ -29,7 +30,6 @@ const CATEGORY_ADMIN = config.channels.admin;
 
 const TICKET_TTL_MS = 48 * 60 * 60 * 1000;
 const SWEEP_MS = 5 * 60 * 1000;
-const COUNTDOWN_MS = 60 * 1000;
 const COOLDOWN_MS = 60 * 60 * 1000;
 const MAX_LOG_ENTRIES = 1000;
 const EMBED_COLOR = 0xe77cae;
@@ -40,19 +40,12 @@ const PANEL_TEXT =
   "(censurá cualquier otra información) y EN LA MISMA IMAGEN algún papel 📄 que diga tu " +
   "username junto al nombre del servidor.";
 
-function formatRemaining(ms) {
-  const totalMinutes = Math.max(0, Math.ceil(ms / 60_000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
-}
-
 const TICKET_TEXT = (username, expiresAt) =>
   `🔞 Hola ${username}!\n\n` +
   "Para verificarte, vamos a necesitar una foto 📸 de alguna " +
   "identificación 🪪 que diga tu fecha de nacimiento (censurá cualquier otra información) " +
   "y EN LA MISMA IMAGEN algún papel 📄 que diga tu username junto al nombre del servidor.\n\n" +
-  `Tenés ${formatRemaining(expiresAt - Date.now())} para hacerlo, ` +
+  `Tenés hasta <t:${Math.floor(expiresAt / 1000)}:R> para hacerlo, ` +
   "luego la solicitud se cerrará y deberás crear una nueva.";
 
 const rejectDm = (retryAt) =>
@@ -91,8 +84,6 @@ function loadState() {
             : typeof ticket.userTag === "string"
               ? ticket.userTag
               : ticket.userId,
-        messageId:
-          typeof ticket.messageId === "string" ? ticket.messageId : null,
         guildId: typeof ticket.guildId === "string" ? ticket.guildId : null,
         createdAt: Number.isFinite(ticket.createdAt) ? ticket.createdAt : null,
         expiresAt: ticket.expiresAt
@@ -207,15 +198,6 @@ function ticketPayload(user, channelId, expiresAt) {
       ]
     }
   };
-}
-
-function isStaff(interaction) {
-  if (!interaction.inGuild()) return false;
-
-  return (
-    interaction.guild.ownerId === interaction.user.id ||
-    hasAnyRole(interaction, STAFF_ROLES)
-  );
 }
 
 function findTicketByUser(userId) {
@@ -360,7 +342,6 @@ const ensurePanel = singleFlight(async (client) => {
       const message = await channel.messages.fetch(state.panelMessageId);
 
       if (message.author.id === client.user.id) {
-        await message.edit(panelPayload());
         return message;
       }
 
@@ -607,7 +588,6 @@ async function openTicket(interaction) {
       userId: user.id,
       userTag: user.tag,
       username: user.username,
-      messageId: null,
       guildId: guild.id,
       createdAt: now,
       expiresAt
@@ -616,11 +596,7 @@ async function openTicket(interaction) {
     try {
       state.tickets[channel.id] = ticket;
       saveState();
-      const message = await channel.send(
-        ticketPayload(user, channel.id, expiresAt)
-      );
-      ticket.messageId = message.id;
-      saveState();
+      await channel.send(ticketPayload(user, channel.id, expiresAt));
     } catch (err) {
       delete state.tickets[channel.id];
 
@@ -725,12 +701,11 @@ async function acceptTicket(interaction, channelId) {
       : "✅ Solicitud aceptada. El anuncio se publicará en el canal general."
   );
 
-  removeTicket(ticket.channelId);
-
   try {
     await interaction.channel.delete(
       `Verificación aprobada por ${interaction.user.tag}`
     );
+    removeTicket(ticket.channelId);
   } catch (err) {
     console.error(`${TAG} ⚠️ no pude borrar el canal: ${err.message}`);
   }
@@ -787,12 +762,12 @@ async function rejectTicket(interaction, channelId) {
   });
 
   await respond(interaction, "❌ Solicitud rechazada.");
-  removeTicket(ticket.channelId);
 
   try {
     await interaction.channel.delete(
       `Verificación rechazada por ${interaction.user.tag}`
     );
+    removeTicket(ticket.channelId);
   } catch (err) {
     console.error(`${TAG} ⚠️ no pude borrar el canal: ${err.message}`);
   }
@@ -831,73 +806,16 @@ async function cancelTicket(interaction, channelId) {
 
   setCooldown(ticket.userId);
   await respond(interaction, "❌ Solicitud cancelada.");
-  removeTicket(ticket.channelId);
 
   try {
     await interaction.channel.delete(
       `Verificación cancelada por ${interaction.user.tag}`
     );
+    removeTicket(ticket.channelId);
   } catch (err) {
     console.error(`${TAG} ⚠️ no pude borrar el canal: ${err.message}`);
   }
 }
-
-const refreshTicketCountdowns = singleFlight(async (client) => {
-  const now = Date.now();
-
-  for (const [channelId, ticket] of Object.entries(state.tickets)) {
-    if (ticket.expiresAt <= now) continue;
-
-    try {
-      const channel = await client.channels.fetch(channelId);
-      if (!channel?.isTextBased()) continue;
-
-      let message = null;
-
-      if (ticket.messageId) {
-        message = await channel.messages
-          .fetch(ticket.messageId)
-          .catch((err) => {
-            if (err.code === 10008) return null;
-            throw err;
-          });
-      }
-
-      if (!message) {
-        const recent = await channel.messages.fetch({ limit: 20 });
-        message = recent.find(
-          (candidate) =>
-            candidate.author.id === client.user.id &&
-            candidate.embeds.some(
-              (embed) => embed.title === "Solicitud de verificación"
-            )
-        );
-
-        if (!message) continue;
-
-        ticket.messageId = message.id;
-
-        try {
-          saveState();
-        } catch (err) {
-          console.error(`${TAG} ⚠️ no pude guardar el estado: ${err.message}`);
-        }
-      }
-
-      await message.edit({
-        embeds: [
-          ticketEmbed(ticket.username ?? ticket.userTag, ticket.expiresAt)
-        ]
-      });
-    } catch (err) {
-      if (err.code === 10003) continue;
-
-      console.error(
-        `${TAG} ⚠️ no pude actualizar el contador de ${channelId}: ${err.message}`
-      );
-    }
-  }
-});
 
 function start(client) {
   client.on("channelDelete", (channel) => {
@@ -908,28 +826,7 @@ function start(client) {
     }
   });
 
-  sweep(client).catch((err) => {
-    console.error(`${TAG} ⚠️ error en el barrido inicial: ${err.message}`);
-  });
-
-  refreshTicketCountdowns(client).catch((err) => {
-    console.error(`${TAG} ⚠️ error al actualizar contadores: ${err.message}`);
-  });
-
-  const timer = setInterval(() => {
-    sweep(client).catch((err) => {
-      console.error(`${TAG} ⚠️ error en el barrido: ${err.message}`);
-    });
-  }, SWEEP_MS);
-
-  const countdownTimer = setInterval(() => {
-    refreshTicketCountdowns(client).catch((err) => {
-      console.error(`${TAG} ⚠️ error al actualizar contadores: ${err.message}`);
-    });
-  }, COUNTDOWN_MS);
-
-  timer.unref?.();
-  countdownTimer.unref?.();
+  every(SWEEP_MS, () => sweep(client), { first: 0, label: TAG }).unref?.();
   console.log(`${TAG} ✅ panel y tickets de verificación activos`);
 }
 

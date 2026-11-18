@@ -8,6 +8,8 @@ module.exports = {
 
   async execute(interaction) {
     const key = interaction.guildId ?? interaction.user.id;
-    await interaction.reply({ ...quilombo.buildView(key) });
+    const fresh = !quilombo.get(key);
+    if (fresh) quilombo.set(key);
+    await interaction.reply(quilombo.buildView(key, { fresh }));
   }
 };

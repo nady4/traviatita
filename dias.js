@@ -49,22 +49,38 @@ function set(userId, date) {
   saveState();
 }
 
+function addMonthsClamped(date, months) {
+  const total = date.getUTCFullYear() * 12 + date.getUTCMonth() + months;
+  const y = Math.floor(total / 12);
+  const m = ((total % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m, Math.min(date.getUTCDate(), lastDay)));
+}
+
 function breakdown(start, now = todayUtc()) {
   const totalDays = Math.round((now - start) / 86_400_000);
-  let y = now.getUTCFullYear() - start.getUTCFullYear();
-  let mo = now.getUTCMonth() - start.getUTCMonth();
-  let d = now.getUTCDate() - start.getUTCDate();
-  if (d < 0) {
-    mo--;
-    const py = now.getUTCMonth() === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();
-    const pm = now.getUTCMonth() === 0 ? 11 : now.getUTCMonth() - 1;
-    d += new Date(Date.UTC(py, pm + 1, 0)).getUTCDate();
+  let months =
+    (now.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+    (now.getUTCMonth() - start.getUTCMonth());
+
+  let candidate = addMonthsClamped(start, months);
+
+  if (candidate > now) {
+    months--;
+    candidate = addMonthsClamped(start, months);
   }
-  if (mo < 0) {
-    y--;
-    mo += 12;
+
+  if (
+    candidate.getUTCDate() !== start.getUTCDate() &&
+    candidate >= now
+  ) {
+    months--;
   }
-  return { y, mo, d, totalDays };
+
+  const anchor = addMonthsClamped(start, months);
+  const d = Math.max(0, Math.round((now - anchor) / 86_400_000));
+
+  return { y: Math.floor(months / 12), mo: months % 12, d, totalDays };
 }
 
 function fmtDuration({ y, mo, d }) {
@@ -72,10 +88,8 @@ function fmtDuration({ y, mo, d }) {
   if (y) parts.push(`${y} ${y === 1 ? 'año' : 'años'}`);
   if (mo) parts.push(`${mo} ${mo === 1 ? 'mes' : 'meses'}`);
   if (d || !parts.length) parts.push(`${d} ${d === 1 ? 'día' : 'días'}`);
-  const first = parts.shift();
-  if (!parts.length) return first;
-  const last = parts.pop();
-  return `${first}${parts.length ? '' : ''}${parts.length ? ', ' + parts.join(', ') + ' y ' : ' y '}${last}`;
+  if (parts.length === 1) return parts[0];
+  return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
 }
 
 function buildView(userId) {

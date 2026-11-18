@@ -113,10 +113,10 @@ function track({ messageId, channelId, authorId, text }) {
   saveState();
 }
 
-function findPending(text, createdAt) {
-  if (!text || createdAt == null) return null;
+function findPendings(text, createdAt) {
+  if (!text || createdAt == null) return [];
   const normalized = normalize(text);
-  return state.pending.find(
+  return state.pending.filter(
     (entry) =>
       normalize(entry.text) === normalized &&
       createdAt >= entry.createdAt - CLOCK_SKEW_MS
@@ -187,26 +187,38 @@ async function runCheck(client) {
     }
     if (!text) continue;
 
-    let pending = findPending(text, createdAt);
+    let pendings = findPendings(text, createdAt);
 
-    if (!pending && !fetched) {
+    if (!pendings.length && !fetched) {
       const details = await fetchTweet(tweet.id).catch(() => null);
       if (details) {
-        pending = findPending(details.text, createdAt ?? details.createdAt);
+        pendings = findPendings(details.text, createdAt ?? details.createdAt);
       }
     }
 
-    if (!pending) {
+    if (!pendings.length) {
       markSeen(tweet.id);
       changed = true;
       continue;
     }
 
-    const result = await sendReply(client, pending, tweet.id);
-    if (result === "retry") continue;
+    let retry = false;
+
+    for (const pending of pendings) {
+      const result = await sendReply(client, pending, tweet.id);
+
+      if (result === "retry") {
+        retry = true;
+        continue;
+      }
+
+      state.pending = state.pending.filter((entry) => entry !== pending);
+      changed = true;
+    }
+
+    if (retry) continue;
 
     markSeen(tweet.id);
-    state.pending = state.pending.filter((entry) => entry !== pending);
     changed = true;
   }
 
