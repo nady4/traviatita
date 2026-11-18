@@ -93,6 +93,7 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | 🏳️‍⚧️ `/travestir`      | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg).                              |
 | ✅ `/verificar <usuario>` | Verifica a un miembro con el rol verificade y anuncia en el canal general que ya tiene acceso a los canales NSFW (solo rol 200kg). |
 | 🔒 `/enjaular <usuario>` | Quita los roles traviatense y verificade, asigna el rol preso, anuncia en general y da la bienvenida en el canal de presos (solo rol 200kg). |
+| 🔓 `/desenjaular <usuario>` | Quita el rol preso, devuelve el rol traviatense, anuncia en general y se despide en el canal de presos (solo rol 200kg). |
 | 🐂 `/cuckear <usuario>` | Quita los roles traviatense y verificade, asigna el rol cuck y anuncia en general que sólo puede ver el servidor (solo rol 200kg). |
 | 🐱 `/github`         | Muestra el repositorio de GitHub del proyecto.                                                            |
 
