@@ -2,7 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('
 const { create } = require('./store');
 const { timestamp } = require('./utils/discord');
 const { singleFlight } = require('./utils/async');
-const { every } = require('./utils/schedule');
+const { every } = require('./utils/time');
 
 const TAG = '⏰ [hormonas]';
 

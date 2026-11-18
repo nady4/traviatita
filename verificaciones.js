@@ -13,7 +13,7 @@ const store = require("./store");
 const { singleFlight } = require("./utils/async");
 const { getTextChannel, timestamp } = require("./utils/discord");
 const { isStaff } = require("./utils/permissions");
-const { every } = require("./utils/schedule");
+const { every } = require("./utils/time");
 
 const TAG = "🪪 [verificaciones]";
 const STATE = store.create("verificaciones.json", TAG);

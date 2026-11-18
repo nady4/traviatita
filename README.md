@@ -8,7 +8,7 @@ Bot de Discord para el servidor de <a href="https://discord.gg/zVAC3NBz43">Opera
 
 - 🟢 **Node.js 20** o superior.
 - 🤖 Un bot de Discord con los intents **Guilds** y **GuildMembers** habilitados.
-- 🛡️ Permisos de **Gestionar roles**, **Gestionar canales**, **Enviar mensajes**, **Insertar enlaces** y **Leer historial de mensajes** en los canales de anuncios.
+- 🛡️ Permisos de **Gestionar roles**, **Gestionar canales**, **Enviar mensajes**, **Adjuntar archivos**, **Insertar enlaces** y **Leer historial de mensajes** en los canales de anuncios.
 - 🔺 El rol del bot debe estar por encima de los roles que asigna.
 
 <br>
@@ -62,9 +62,11 @@ npm run dev
 | `ROLE_ASTROVIALS_ID`           | ✅ Sí       | Rol que se pinguea en los avisos de stock de Astrovials y al que se suscriben los usuarios.      |
 | `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
 | `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
-| `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación y castigos.                         |
+| `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación, castigos, bienvenidas y despedidas. |
 | `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal donde se publica el panel de verificación y que se menciona en el anuncio de `/verificar`. |
 | `CHANNEL_JAULA_ID`             | ✅ Sí       | Canal al que sólo tienen acceso los presos y donde se les da la bienvenida.                      |
+| `CHANNEL_REGLAS_ID`            | ✅ Sí       | Canal de reglas que se enlaza en el mensaje de bienvenida.                                       |
+| `CHANNEL_ROLES_ID`             | ✅ Sí       | Canal de roles que se enlaza en el mensaje de bienvenida.                                        |
 | `CATEGORY_ADMIN_ID`            | ✅ Sí       | Categoría admin donde se crean los canales temporales de verificación.                           |
 | `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
 | `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
@@ -96,6 +98,14 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 | 🔓 `/desenjaular <usuario>` | Quita el rol preso, devuelve el rol traviatense, anuncia en general y se despide en el canal de presos (solo rol 200kg). |
 | 🐂 `/cuckear <usuario>` | Quita los roles traviatense y verificade, asigna el rol cuck y anuncia en general que sólo puede ver el servidor (solo rol 200kg). |
 | 🐱 `/github`         | Muestra el repositorio de GitHub del proyecto.                                                            |
+
+<br>
+
+## 👋 Entradas y salidas
+
+Cuando alguien entra al servidor, el bot publica en `CHANNEL_GENERAL_ID` la bienvenida **DENLE LA BIENVENIDA A @usuario!!!!**, debajo un saludo que enlaza el canal de reglas (`CHANNEL_REGLAS_ID`) y el de roles (`CHANNEL_ROLES_ID`), y más abajo el avatar del usuario recortado en círculo, generado con `@napi-rs/canvas`. Cuando alguien se va, publica `{username} ({name}) se fue del server u.u`, usando el username y el nombre del servidor.
+
+Los anuncios ignoran a los bots y las menciones se envían sin notificar (`allowedMentions: { parse: [] }`). Además de los anuncios, cada entrada y salida suma al seguimiento diario que se muestra en `/stats`.
 
 <br>
 
@@ -162,13 +172,12 @@ utils/
   async.js               sleep y singleFlight para tareas concurrentes
   command.js             Wrapper de comandos (guild, roles y handler)
   punishments.js         Flujo compartido de castigos con roles
-  schedule.js            Temporizadores periódicos con manejo de errores
   discord.js             Timestamps, canales y anuncios compartidos
   html.js                Decodificación de entidades y HTML a texto
   http.js                User-Agent y fetch con timeout
   interactions.js        Respuestas efímeras y update/reply
   permissions.js         Chequeo de roles del miembro
-  time.js                Formato de duraciones
+  time.js                Formato de duraciones y temporizadores periódicos
 store.js                 Persistencia JSON con escritura atómica
 calendario.js            Helpers de fecha y zona horaria para los resúmenes
 produccion.js            Histórico diario de viales ingresados por tienda y producto
@@ -180,7 +189,7 @@ hormonas.js              Recordatorios de hormonas por DM
 dias.js                  Contador de días de HRT
 quilombo.js              Contador de días sin quilombos
 dado.js                  Tiradas de dados
-miembros.js              Seguimiento diario de entradas y salidas de miembros
+miembros.js              Seguimiento diario de entradas/salidas y anuncios de bienvenida/despedida
 travestir.js             Asignación del rol traviatense
 verificar.js             Asignación del rol verificade y anuncio en el canal general
 verificaciones.js        Panel, tickets temporales, vencimiento y logs de verificación

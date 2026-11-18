@@ -5,7 +5,7 @@ const cal = require("./calendario");
 const produccion = require("./produccion");
 const { sleep, singleFlight } = require("./utils/async");
 const { timestamp, announceStockChange } = require("./utils/discord");
-const { every } = require("./utils/schedule");
+const { every } = require("./utils/time");
 
 const STALE_ANNOUNCE_MS = 30 * 60_000;
 

@@ -1,8 +1,14 @@
+const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
+const { createCanvas, loadImage } = require("@napi-rs/canvas");
 const cal = require("./calendario");
 const store = require("./store");
+const config = require("./config");
+const { sendToChannel } = require("./utils/discord");
 
 const TAG = "🚪 [miembros]";
 const STORE = store.create("miembros.json", TAG);
+const AVATAR_SIZE = 256;
+const AVATAR_RING = "#ff8ad8";
 
 let state = loadState();
 
@@ -67,16 +73,82 @@ function summary(now = new Date()) {
   };
 }
 
+async function circularAvatar(user) {
+  const url = user.displayAvatarURL({
+    extension: "png",
+    size: AVATAR_SIZE,
+    forceStatic: true
+  });
+  const image = await loadImage(url);
+  const canvas = createCanvas(AVATAR_SIZE, AVATAR_SIZE);
+  const ctx = canvas.getContext("2d");
+  const center = AVATAR_SIZE / 2;
+  const radius = center - 6;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(center, center, radius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(image, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(center, center, radius, 0, Math.PI * 2);
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = AVATAR_RING;
+  ctx.stroke();
+
+  return canvas.encode("png");
+}
+
+async function announceJoin(client, member) {
+  const buffer = await circularAvatar(member.user);
+  const file = new AttachmentBuilder(buffer, { name: "bienvenida.png" });
+  const embed = new EmbedBuilder()
+    .setColor(0xff8ad8)
+    .setImage("attachment://bienvenida.png");
+
+  await sendToChannel(client, config.channels.general, {
+    content:
+      `DENLE LA BIENVENIDA A ${member.user.toString()}!!!!\n` +
+      `Mirá las <#${config.channels.reglas}>, ponete <#${config.channels.roles}> y portate bien >w<`,
+    embeds: [embed],
+    files: [file],
+    allowedMentions: { parse: [] }
+  });
+}
+
 function start(client) {
-  client.on("guildMemberAdd", (member) => {
+  client.on("guildMemberAdd", async (member) => {
     if (recordJoin(member)) {
       console.log(`${TAG} ➕ ${member.user.tag} entró al servidor`);
     }
+
+    if (!member?.user || member.user.bot) return;
+
+    try {
+      await announceJoin(client, member);
+    } catch (err) {
+      console.error(`${TAG} ⚠️ no pude anunciar la entrada:`, err.message);
+    }
   });
 
-  client.on("guildMemberRemove", (member) => {
+  client.on("guildMemberRemove", async (member) => {
     if (recordLeave(member)) {
       console.log(`${TAG} ➖ ${member.user.tag} salió del servidor`);
+    }
+
+    if (!member?.user || member.user.bot) return;
+
+    const name = member.displayName || member.user.displayName || member.user.username;
+    try {
+      await sendToChannel(client, config.channels.general, {
+        content: `${member.user.toString()} (${name}) se fue del server u.u`,
+        allowedMentions: { parse: [] }
+      });
+    } catch (err) {
+      console.error(`${TAG} ⚠️ no pude anunciar la salida:`, err.message);
     }
   });
 
