@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
-const { create } = require('./store');
-const { stableDayTimestamp } = require('./utils/discord');
+const { create } = require('../lib/store');
+const { stableDayTimestamp } = require('../utils/discord');
 
 const STORE = create('dias.json', '⏳ [dias]');
 

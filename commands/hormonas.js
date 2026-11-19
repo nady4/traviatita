@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const hormonas = require("../hormonas");
+const hormonas = require("../services/hormonas");
 
 module.exports = {
   data: new SlashCommandBuilder()

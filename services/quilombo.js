@@ -4,10 +4,10 @@ const {
   ButtonStyle,
   EmbedBuilder
 } = require("discord.js");
-const store = require("./store");
-const { channels, roles } = require("./config");
-const { getTextChannel, timestamp } = require("./utils/discord");
-const { hasAnyRole } = require("./utils/permissions");
+const store = require("../lib/store");
+const { channels, roles } = require("../config");
+const { getTextChannel, timestamp } = require("../utils/discord");
+const { hasAnyRole } = require("../utils/permissions");
 
 const TAG = "💥 [quilombo]";
 const ANNOUNCE_CHANNEL_ID = channels.quilombo;

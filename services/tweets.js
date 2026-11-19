@@ -1,8 +1,8 @@
-const config = require("./config");
-const { create } = require("./store");
-const { CHROME_USER_AGENT, fetchText } = require("./utils/http");
-const { normalize, htmlToText } = require("./utils/html");
-const { singleFlight } = require("./utils/async");
+const config = require("../config");
+const { create } = require("../lib/store");
+const { CHROME_USER_AGENT, fetchText } = require("../utils/http");
+const { normalize, htmlToText } = require("../utils/html");
+const { singleFlight } = require("../utils/async");
 
 const TAG = "🐦 [tweets]";
 const HANDLE = "traviatitatan";

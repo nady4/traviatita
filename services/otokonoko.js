@@ -1,9 +1,9 @@
 const crypto = require("crypto");
-const { create } = require("./store");
-const { roles } = require("./config");
+const { create } = require("../lib/store");
+const { roles } = require("../config");
 const { createStockTracker } = require("./stockTracker");
-const { USER_AGENT } = require("./utils/http");
-const { decodeEntities } = require("./utils/html");
+const { USER_AGENT } = require("../utils/http");
+const { decodeEntities } = require("../utils/html");
 
 const BASE = "https://otkph.am";
 const TAG = "💊 [otokonoko]";

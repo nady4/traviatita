@@ -1,0 +1,114 @@
+{
+  "roles": {
+    "traviatense": "1570037127620853843",
+    "bot": "1527109023684624475",
+    "admin500kg": "1527108969741422672",
+    "admin200kg": "1527108970857234595",
+    "admin120kg": "1527108972216320091",
+    "verificade": "1560746200783650908",
+    "preso": "1561899916098277398",
+    "cuck": "1569852751494520883",
+    "otokonoko": "1564743557733027871",
+    "astrovials": "1564743677601915051"
+  },
+  "channels": {
+    "quilombo": "1527109090965192774",
+    "stock": "1569530965380825159",
+    "general": "1527109107012866219",
+    "verificacion": "1527109087999950908",
+    "jaula": "1561899729925709964",
+    "reglas": "1527109088960581725",
+    "roles": "1527109102310916219",
+    "logs": "1560747822360567973",
+    "admin": "1527109073647177790"
+  },
+  "roleGroups": [
+    {
+      "id": "paises-1",
+      "title": "Roles de país",
+      "color": 1752220,
+      "roles": [
+        { "name": "Argentina", "id": "1527109026255470651", "emoji": ":flag_ar:" },
+        { "name": "Bolivia", "id": "1527109027492921384", "emoji": ":flag_bo:" },
+        { "name": "Brasil", "id": "1527109028642160764", "emoji": ":flag_br:" },
+        { "name": "Chile", "id": "1527109029984337940", "emoji": ":flag_cl:" },
+        { "name": "Colombia", "id": "1527109030567350274", "emoji": ":flag_co:" },
+        { "name": "Costa Rica", "id": "1527109031703871509", "emoji": ":flag_cr:" },
+        { "name": "Cuba", "id": "1527109032861634640", "emoji": ":flag_cu:" },
+        { "name": "Ecuador", "id": "1527109034212069400", "emoji": ":flag_ec:" },
+        { "name": "El Salvador", "id": "1527109035352916138", "emoji": ":flag_sv:" },
+        { "name": "Guatemala", "id": "1527109036393234523", "emoji": ":flag_gt:" },
+        { "name": "Haití", "id": "1527109037378899968", "emoji": ":flag_ht:" },
+        { "name": "Honduras", "id": "1527109038243053791", "emoji": ":flag_hn:" }
+      ]
+    },
+    {
+      "id": "paises-2",
+      "title": "Roles de país",
+      "color": 1752220,
+      "roles": [
+        { "name": "México", "id": "1527109039383646369", "emoji": ":flag_mx:" },
+        { "name": "Nicaragua", "id": "1527109041569140790", "emoji": ":flag_ni:" },
+        { "name": "Panamá", "id": "1527109042835689592", "emoji": ":flag_pa:" },
+        { "name": "Paraguay", "id": "1527109043624349800", "emoji": ":flag_py:" },
+        { "name": "Perú", "id": "1527109044719058995", "emoji": ":flag_pe:" },
+        { "name": "Puerto Rico", "id": "1563259894423883786", "emoji": ":flag_pr:" },
+        { "name": "República Dominicana", "id": "1527109045675364553", "emoji": ":flag_do:" },
+        { "name": "Uruguay", "id": "1527109046480666688", "emoji": ":flag_uy:" },
+        { "name": "Venezuela", "id": "1527109047856267375", "emoji": ":flag_ve:" },
+        { "name": "España", "id": "1527109048426827958", "emoji": ":flag_es:" },
+        { "name": "USA", "id": "1572793079289880726", "emoji": ":flag_us:" },
+        { "name": "Israel", "id": "1572792733905715210", "emoji": ":flag_il:" }
+      ]
+    },
+    {
+      "id": "notificaciones",
+      "title": "Roles de notificación",
+      "color": 5793266,
+      "roles": [
+        { "name": "VC", "id": "1527109012116607078", "emoji": ":microphone2:" },
+        { "name": "Juegos", "id": "1527109012825575537", "emoji": ":video_game:" },
+        { "name": "Juntadas", "id": "1527109014033404024", "emoji": ":leaves:" },
+        { "name": "Revivir chat", "id": "1527109014960209950", "emoji": ":speaking_head:" },
+        { "name": "Bumper", "id": "1527109016050860042", "emoji": ":bell:" },
+        { "name": "Alianzas", "id": "1561005148271149126", "emoji": ":handshake:" }
+      ]
+    },
+    {
+      "id": "identidad",
+      "title": "Roles de identidad",
+      "color": 15170734,
+      "roles": [
+        { "name": "hombre", "id": "1527109002893463643", "emoji": ":light_blue_heart:" },
+        { "name": "mujer", "id": "1527109003941908641", "emoji": ":pink_heart:" },
+        { "name": "trans", "id": "1527109004839489546", "emoji": ":purple_heart:" },
+        { "name": "cis", "id": "1527109005716230225", "emoji": ":green_heart:" },
+        { "name": "no binarie", "id": "1527109006357696644", "emoji": ":yellow_heart:" },
+        { "name": "repper/pre-hrt", "id": "1527109007863713922", "emoji": ":heart:" }
+      ]
+    },
+    {
+      "id": "riesgo",
+      "title": "Elegí que tan chistose sos jijoooooo",
+      "color": 15105570,
+      "single": true,
+      "roles": [
+        { "name": "alto riesgo", "id": "1527108995716747339", "emoji": ":biohazard:" },
+        { "name": "riesgo medio", "id": "1527108997352525994", "emoji": ":radioactive:" },
+        { "name": "bajo riesgo", "id": "1527109001991553074", "emoji": ":mobile_phone_off:" }
+      ]
+    },
+    {
+      "id": "pronombres",
+      "title": "Pronombres",
+      "color": 10181046,
+      "roles": [
+        { "name": "él", "id": "1563254658607091842", "emoji": ":light_blue_heart:" },
+        { "name": "ella", "id": "1563254612599767053", "emoji": ":pink_heart:" },
+        { "name": "elle", "id": "1563254683521257675", "emoji": ":purple_heart:" },
+        { "name": "preguntar", "id": "1563254714316095639", "emoji": ":yellow_heart:" },
+        { "name": "no me hablen", "id": "1563254745588568208", "emoji": ":black_heart:" }
+      ]
+    }
+  ]
+}

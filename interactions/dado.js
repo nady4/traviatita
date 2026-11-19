@@ -1,4 +1,4 @@
-const dado = require("../dado");
+const dado = require("../services/dado");
 const { replyEphemeral, updateOrReply } = require("../utils/interactions");
 
 module.exports = {

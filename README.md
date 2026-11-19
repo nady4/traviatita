@@ -7,8 +7,8 @@ Bot de Discord para el servidor de <a href="https://discord.gg/zVAC3NBz43">Opera
 ## 📋 Requisitos
 
 - 🟢 **Node.js 20** o superior.
-- 🤖 Un bot de Discord con los intents **Guilds** y **GuildMembers** habilitados.
-- 🛡️ Permisos de **Gestionar roles**, **Gestionar canales**, **Enviar mensajes**, **Adjuntar archivos**, **Insertar enlaces** y **Leer historial de mensajes** en los canales de anuncios.
+- 🤖 Un bot de Discord con los intents **Guilds**, **GuildMembers**, **GuildMessages**, **GuildMessageReactions** y **GuildVoiceStates** habilitados, más el intent privilegiado **MessageContent** (necesario para ver el contenido de mensajes editados/eliminados).
+- 🛡️ Permisos de **Gestionar roles**, **Gestionar canales**, **Enviar mensajes**, **Adjuntar archivos**, **Insertar enlaces**, **Leer historial de mensajes** y **Añadir reacciones** en los canales de anuncios y en el canal de logs.
 - 🔺 El rol del bot debe estar por encima de los roles que asigna.
 
 <br>
@@ -18,7 +18,7 @@ Bot de Discord para el servidor de <a href="https://discord.gg/zVAC3NBz43">Opera
 ```bash
 npm install
 cp .env.example .env
-# completar .env con el token, roles, canales y GUILD_ID del servidor
+# completar .env con TOKEN, GUILD_ID, TWEET_USER_ID e intervalos; los IDs del servidor están en config/ids.json
 npm run deploy   # registra los slash commands
 npm start
 ```
@@ -45,37 +45,19 @@ npm run dev
 
 ## 🔐 Variables de entorno
 
-| Variable                       | Obligatoria | Descripción                                                                                      |
-| ------------------------------ | ----------- | ------------------------------------------------------------------------------------------------ |
-| `TOKEN`                        | ✅ Sí       | Token del bot de Discord.                                                                        |
-| `GUILD_ID`                     | ➖ No       | Servidor donde se registran los comandos (actualización instantánea). Si no se define, se registran globalmente. |
-| `STATE_DIR`                    | ➖ No       | Carpeta donde se guardan los JSON de estado. Si no se define, se usa el directorio del proyecto. |
-| `ROLE_TRAVIATENSE_ID`          | ✅ Sí       | Rol que asigna `/travestir` y que reciben los nuevos miembros.                                   |
-| `ROLE_BOT_ID`                  | ✅ Sí       | Rol de bots, excluido de `/travestir`.                                                           |
-| `ROLE_500KG_ID`                | ✅ Sí       | Rol 500kg que se menciona en las solicitudes de verificación y puede gestionarlas.                |
-| `ROLE_200KG_ID`                | ✅ Sí       | Rol autorizado para usar `/travestir`, `/verificar`, `/enjaular` y `/cuckear`.                   |
-| `ROLE_120KG_ID`                | ✅ Sí       | Rol 120kg que se lista en los roles del staff dentro de `/stats`.                                 |
-| `ROLE_VERIFICADE_ID`           | ✅ Sí       | Rol que asignan `/verificar` y las solicitudes aceptadas, y que da acceso a los canales NSFW.    |
-| `ROLE_PRESO_ID`                | ✅ Sí       | Rol que asigna `/enjaular` al quitar los roles traviatense y verificade.                          |
-| `ROLE_CUCK_ID`                 | ✅ Sí       | Rol que asigna `/cuckear` al quitar los roles traviatense y verificade.                           |
-| `ROLE_OTOKONOKO_ID`            | ✅ Sí       | Rol que se pinguea en los avisos de stock de Otokonoko y al que se suscriben los usuarios.       |
-| `ROLE_ASTROVIALS_ID`           | ✅ Sí       | Rol que se pinguea en los avisos de stock de Astrovials y al que se suscriben los usuarios.      |
-| `CHANNEL_ANNOUNCE_QUILOMBO_ID` | ✅ Sí       | Canal donde se anuncian los reinicios de la cuenta de quilombo.                                  |
-| `CHANNEL_ANNOUNCE_STOCK_ID`    | ✅ Sí       | Canal donde se anuncian los cambios de stock de ambas tiendas.                                   |
-| `CHANNEL_GENERAL_ID`           | ✅ Sí       | Canal general donde se publican los anuncios de verificación, castigos, bienvenidas y despedidas. |
-| `CHANNEL_VERIFICACION_ID`      | ✅ Sí       | Canal donde se publica el panel de verificación y que se menciona en el anuncio de `/verificar`. |
-| `CHANNEL_JAULA_ID`             | ✅ Sí       | Canal al que sólo tienen acceso los presos y donde se les da la bienvenida.                      |
-| `CHANNEL_REGLAS_ID`            | ✅ Sí       | Canal de reglas que se enlaza en el mensaje de bienvenida.                                       |
-| `CHANNEL_ROLES_ID`             | ✅ Sí       | Canal de roles que se enlaza en el mensaje de bienvenida.                                        |
-| `CATEGORY_ADMIN_ID`            | ✅ Sí       | Categoría admin donde se crean los canales temporales de verificación.                           |
-| `TWEET_USER_ID`                | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
-| `TWEET_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
-| `STOCK_CHECK_MINUTES`          | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
-| `STOCK_SUMMARY_TZ`             | ➖ No       | Zona horaria IANA para los resúmenes de viales ingresados (diario, semanal y mensual). Por defecto `America/Argentina/Buenos_Aires`. |
+| Variable                | Obligatoria | Descripción                                                                                      |
+| ----------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `TOKEN`                 | ✅ Sí       | Token del bot de Discord.                                                                        |
+| `GUILD_ID`              | ➖ No       | Servidor donde se registran los comandos (actualización instantánea). Si no se define, se registran globalmente. |
+| `STATE_DIR`             | ➖ No       | Carpeta donde se guardan los JSON de estado (excepto `data/autoroles.json`). Si no se define, se usa `data/`. |
+| `TWEET_USER_ID`         | ✅ Sí       | Usuario que recibe por DM el link para twittear en `/traviatweet`.                               |
+| `TWEET_CHECK_MINUTES`   | ✅ Sí       | Cada cuántos minutos se revisa `x.com/traviatitatan` mientras haya tweets pendientes.            |
+| `STOCK_CHECK_MINUTES`   | ✅ Sí       | Cada cuántos minutos se revisa el stock de Otokonoko y Astrovials.                               |
+| `STOCK_SUMMARY_TZ`      | ➖ No       | Zona horaria IANA para los resúmenes de viales ingresados (diario, semanal y mensual). Por defecto `America/Argentina/Buenos_Aires`. |
 
-`.env` es la fuente de verdad: el código no define valores de reemplazo para estas variables. Las únicas excepciones son `STATE_DIR`, `GUILD_ID` y `STOCK_SUMMARY_TZ`, que al no estar definidas usan el directorio del proyecto, el registro global de comandos y `America/Argentina/Buenos_Aires` respectivamente.
+Los IDs de canales, roles y emojis están en `config/ids.json`, versionado en el repositorio. Los IDs de los mensajes de autoasignación se guardan en `data/autoroles.json`, que también se versiona. `.env` solo guarda el token, el servidor de comandos, la carpeta de estado, el usuario de Twitter, los intervalos y la zona horaria.
 
-La configuración se centraliza en `config.js`, que carga `.env` una sola vez y valida al arrancar que no falte ninguna variable obligatoria, que los roles, canales y usuarios sean IDs de Discord válidos y que `STOCK_CHECK_MINUTES` y `TWEET_CHECK_MINUTES` sean enteros positivos. Si algo no cumple, el proceso falla con un mensaje indicando la variable problemática.
+`config/index.js` carga `.env` y `config/ids.json` una sola vez y valida al arrancar que no falte `TOKEN`, `TWEET_USER_ID`, `TWEET_CHECK_MINUTES` ni `STOCK_CHECK_MINUTES`, que `GUILD_ID` y `TWEET_USER_ID` sean IDs de Discord válidos y que los intervalos sean enteros positivos.
 
 <br>
 
@@ -103,19 +85,53 @@ La configuración se centraliza en `config.js`, que carga `.env` una sola vez y 
 
 ## 👋 Entradas y salidas
 
-Cuando alguien entra al servidor, el bot publica en `CHANNEL_GENERAL_ID` la bienvenida **DENLE LA BIENVENIDA A @usuario!!!!**, debajo un saludo que enlaza el canal de reglas (`CHANNEL_REGLAS_ID`) y el de roles (`CHANNEL_ROLES_ID`), y más abajo el avatar del usuario recortado en círculo, generado con `@napi-rs/canvas`. Cuando alguien se va, publica `{username} ({name}) se fue del server u.u`, usando el username y el nombre del servidor.
+Cuando alguien entra al servidor, el bot publica en `config.channels.general` la bienvenida **DENLE LA BIENVENIDA A @usuario!!!!**, debajo un saludo que enlaza el canal de reglas (`config.channels.reglas`) y el de roles (`config.channels.roles`), y más abajo el avatar del usuario recortado en círculo, generado con `@napi-rs/canvas`. Cuando alguien se va, publica `{username} ({name}) se fue del server u.u`, usando el username y el nombre del servidor.
 
 Los anuncios ignoran a los bots y las menciones se envían sin notificar (`allowedMentions: { parse: [] }`). Además de los anuncios, cada entrada y salida suma al seguimiento diario que se muestra en `/stats`.
 
 <br>
 
+## 🎭 Autoasignación de roles por reacción
+
+En el canal `config.channels.roles` el bot publica y mantiene seis mensajes, con los roles de país primero y luego los cuatro grupos:
+
+- 🌎 **Roles de país (1/2)**: Argentina, Bolivia, Brasil, Chile, Colombia, Costa Rica, Cuba, Ecuador, El Salvador, Guatemala, Haití y Honduras.
+- 🌎 **Roles de país (2/2)**: México, Nicaragua, Panamá, Paraguay, Perú, Puerto Rico, República Dominicana, Uruguay, Venezuela, España, USA e Israel.
+- 🎙️ **Roles de notificación**: VC, Juegos, Juntadas, Revivir chat, Bumper y Alianzas.
+- 💗 **Roles de identidad**: hombre, mujer, trans, cis, no binarie y repper/pre-hrt.
+- ☣️ **Elegí que tan chistose sos jijoooooo**: alto riesgo, riesgo medio y bajo riesgo.
+- 🗣️ **Pronombres**: él, ella, elle, preguntar y no me hablen.
+
+Cada opción se muestra como `emoji - nombre` y el bot reacciona con todos los emojis del grupo. Al reaccionar se asigna el rol correspondiente y al quitar la reacción se remueve. El grupo de riesgo es de opción única: al elegir un nivel se quita el anterior; el resto permite acumular roles.
+
+Los IDs de los seis mensajes se guardan en `data/autoroles.json`, fuera de `STATE_DIR`, y se versionan en el repositorio. Si no encuentra un ID, busca el mensaje existente en el canal por título y descripción antes de publicar uno nuevo, así no se duplican al reiniciar ni en la nube. Después del primer arranque, commiteá `data/autoroles.json` para conservar los IDs entre despliegues. Si el orden quedó viejo, el bot repostea solo los mensajes necesarios para dejar los países arriba. Si un mensaje se borra, el bot lo repone una sola vez y actualiza su ID. Las reacciones de bots se ignoran.
+
+<br>
+
+## 📝 Registro de actividad
+
+En el canal `config.channels.logs` el bot registra:
+
+- 🗑️ **Mensajes eliminados**: canal, autor, ID, fecha de creación, contenido y adjuntos.
+- ✏️ **Mensajes editados**: canal, autor, ID, fecha de creación, contenido anterior y nuevo.
+- 🔊 **Entradas y salidas de canales de voz**, incluyendo movimientos entre canales, con el canal y la cantidad de usuarios.
+- 📥 **Entradas y salidas del servidor**, con la fecha de creación de la cuenta, la fecha de ingreso y los roles.
+
+Para mostrar el contenido anterior de un mensaje editado o el contenido de uno eliminado, el bot guarda en memoria los últimos 2000 mensajes. Ese caché no se persiste: los mensajes anteriores al arranque pueden aparecer como sin contenido disponible. Las menciones se envían sin notificar (`allowedMentions: { parse: [] }`) y se excluyen de los logs las ediciones/eliminaciones del propio bot y el mensaje de solicitud de verificación, sin excluir el resto de mensajes de esos canales. Los tiempos se muestran solo en formato relativo.
+
+El contenido de los mensajes requiere el intent privilegiado **Message Content** habilitado en Discord Developer Portal. Sin ese intent el bot no inicia.
+
+<br>
+
 ## 🪪 Verificación por ticket
 
-El canal configurado en `CHANNEL_VERIFICACION_ID` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `CATEGORY_ADMIN_ID`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
+El canal configurado en `config.channels.verificacion` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `config.channels.admin`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
+
+El tiempo restante usa el formato de timestamp de Discord (`<t:...:R>`), que se actualiza solo sin editar el mensaje; el tópico del canal también muestra el vencimiento con ese formato. No hay tareas periódicas que editen el ticket.
 
 La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario, el owner y el staff pueden cancelarla; el owner y el staff pueden aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
 
-Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Los tickets vencen a las 48 horas; el mensaje muestra el tiempo restante y la fecha de vencimiento. El bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
+Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Si la persona sale del servidor, su solicitud abierta se cancela y se borra el canal automáticamente. Los tickets vencen a las 48 horas y el mensaje muestra el tiempo restante en formato relativo. El bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
 
 <br>
 
@@ -129,7 +145,7 @@ La detección se hace leyendo el HTML público del perfil, sin API key. Si el te
 
 ## 💾 Persistencia
 
-El estado se guarda en archivos JSON (`stock.json`, `astro.json`, `anubis.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`, `verificaciones.json`, `verificaciones-log.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
+El estado se guarda en `data/` (o en `STATE_DIR` si está definido) en archivos JSON (`stock.json`, `astro.json`, `anubis.json`, `produccion.json`, `resumenes.json`, `hormonas.json`, `dias.json`, `quilombo.json`, `tweets.json`, `miembros.json`, `verificaciones.json`, `verificaciones-log.json`) mediante escrituras atómicas: primero se escribe un `.tmp` y después se renombra, para no corromper el archivo si el proceso se corta. `data/autoroles.json` es la excepción: vive en `data/` para poder versionarlo y no usa `STATE_DIR`. Al arrancar, si encuentra JSON viejos en la raíz, los migra automáticamente a `data/`. En hosting con redeploy conviene apuntar `STATE_DIR` a un volumen persistente.
 
 El seguimiento de entradas y salidas de miembros empieza a contar desde que se inicia esta versión del bot; no reconstruye el historial anterior.
 
@@ -155,8 +171,32 @@ Además, `produccion.json` guarda las salidas de stock (`exits`) y la duración 
 
 ```
 index.js                 Bootstrap: client, carga de comandos/eventos, login y apagado
-config.js                Carga y validación centralizada de variables de entorno
 deploy-commands.js       Registro de slash commands vía REST
+config/
+  index.js               Carga de .env y config/ids.json
+  ids.json               IDs de canales y roles, más emojis de autoasignación
+lib/
+  store.js               Persistencia JSON atómica y migración a data/
+services/
+  produccion.js          Histórico diario de viales ingresados por tienda y producto
+  stockTracker.js        Tracker genérico de stock (fetch, anuncios y estado)
+  resumenes.js           Resúmenes diario, semanal y mensual de viales ingresados
+  otokonoko.js           Tracker de stock de Otokonoko Pharmacy
+  astrovials.js          Tracker de stock de Astrovials
+  hormonas.js            Recordatorios de hormonas por DM
+  dias.js                Contador de días de HRT
+  quilombo.js            Contador de días sin quilombos
+  dado.js                Tiradas de dados
+  miembros.js            Seguimiento diario de entradas/salidas y anuncios de bienvenida/despedida
+  autoroles.js           Autoasignación de roles por reacción en el canal de roles
+  logs.js                Registro de mensajes, voz y miembros en el canal de logs
+  travestir.js           Asignación del rol traviatense
+  verificar.js           Asignación del rol verificade y anuncio en el canal general
+  verificaciones.js      Panel, tickets temporales, vencimiento y logs de verificación
+  tweets.js              Detección de tweets publicados y respuesta en el canal
+data/
+  autoroles.json         IDs de los mensajes de autoasignación (versionado)
+  *.json                 Estado local (ignorado)
 handlers/
   loadCommands.js        Carga dinámica de commands/
   loadEvents.js          Carga dinámica de events/
@@ -178,22 +218,7 @@ utils/
   interactions.js        Respuestas efímeras y update/reply
   permissions.js         Chequeo de roles del miembro
   time.js                Formato de duraciones y temporizadores periódicos
-store.js                 Persistencia JSON con escritura atómica
-calendario.js            Helpers de fecha y zona horaria para los resúmenes
-produccion.js            Histórico diario de viales ingresados por tienda y producto
-stockTracker.js          Tracker genérico de stock (fetch, anuncios y estado)
-resumenes.js             Resúmenes diario, semanal y mensual de viales ingresados
-otokonoko.js             Tracker de stock de Otokonoko Pharmacy
-astrovials.js            Tracker de stock de Astrovials
-hormonas.js              Recordatorios de hormonas por DM
-dias.js                  Contador de días de HRT
-quilombo.js              Contador de días sin quilombos
-dado.js                  Tiradas de dados
-miembros.js              Seguimiento diario de entradas/salidas y anuncios de bienvenida/despedida
-travestir.js             Asignación del rol traviatense
-verificar.js             Asignación del rol verificade y anuncio en el canal general
-verificaciones.js        Panel, tickets temporales, vencimiento y logs de verificación
-tweets.js                Detección de tweets publicados y respuesta en el canal
+  calendario.js          Helpers de fecha y zona horaria para los resúmenes
 ```
 
 ---

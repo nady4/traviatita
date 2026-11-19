@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const verificar = require("../verificar");
-const verificaciones = require("../verificaciones");
+const verificar = require("../services/verificar");
+const verificaciones = require("../services/verificaciones");
 const { defineCommand } = require("../utils/command");
 
 module.exports = defineCommand({

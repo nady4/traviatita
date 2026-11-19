@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { roles } = require("../config");
-const quilombo = require("../quilombo");
-const miembros = require("../miembros");
-const otokonoko = require("../otokonoko");
-const astrovials = require("../astrovials");
+const quilombo = require("../services/quilombo");
+const miembros = require("../services/miembros");
+const otokonoko = require("../services/otokonoko");
+const astrovials = require("../services/astrovials");
 const { timestamp } = require("../utils/discord");
 const { defineCommand } = require("../utils/command");
 

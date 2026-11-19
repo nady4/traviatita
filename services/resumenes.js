@@ -1,12 +1,12 @@
 const { EmbedBuilder } = require('discord.js');
-const { create } = require('./store');
-const { channels } = require('./config');
-const cal = require('./calendario');
+const { create } = require('../lib/store');
+const { channels } = require('../config');
+const cal = require('../utils/calendario');
 const produccion = require('./produccion');
 const { PRODUCTS: ASTROVIALS_PRODUCTS } = require('./astrovials');
 const { PRODUCTS: OTOKONOKO_PRODUCTS } = require('./otokonoko');
-const { singleFlight } = require('./utils/async');
-const { sendToChannel } = require('./utils/discord');
+const { singleFlight } = require('../utils/async');
+const { sendToChannel } = require('../utils/discord');
 
 const TAG = '📊 [resumenes]';
 const ASTROVIALS_URL = 'https://astrovials.com/en/shop';

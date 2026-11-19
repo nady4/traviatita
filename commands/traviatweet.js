@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const config = require("../config");
-const tweets = require("../tweets");
+const tweets = require("../services/tweets");
 
 const TWEET_LIMIT = 260;
 

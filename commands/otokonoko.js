@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const otokonoko = require("../otokonoko");
+const otokonoko = require("../services/otokonoko");
 const { notifyRow } = require("../ui/stockNotify");
 
 module.exports = {

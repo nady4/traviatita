@@ -1,9 +1,9 @@
 const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
 const { createCanvas, loadImage } = require("@napi-rs/canvas");
-const cal = require("./calendario");
-const store = require("./store");
-const config = require("./config");
-const { sendToChannel } = require("./utils/discord");
+const cal = require("../utils/calendario");
+const store = require("../lib/store");
+const config = require("../config");
+const { sendToChannel } = require("../utils/discord");
 
 const TAG = "🚪 [miembros]";
 const STORE = store.create("miembros.json", TAG);

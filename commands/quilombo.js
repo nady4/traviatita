@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const quilombo = require("../quilombo");
+const quilombo = require("../services/quilombo");
 
 module.exports = {
   data: new SlashCommandBuilder()

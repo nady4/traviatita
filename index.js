@@ -1,10 +1,18 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const config = require("./config");
 const { loadCommands } = require("./handlers/loadCommands");
 const { loadEvents } = require("./handlers/loadEvents");
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent
+  ],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 
 client.on("error", (err) => {

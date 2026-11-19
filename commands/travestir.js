@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const travestir = require("../travestir");
+const travestir = require("../services/travestir");
 const { defineCommand } = require("../utils/command");
 
 module.exports = defineCommand({

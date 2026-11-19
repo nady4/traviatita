@@ -8,12 +8,12 @@ const {
   OverwriteType,
   PermissionFlagsBits
 } = require("discord.js");
-const config = require("./config");
-const store = require("./store");
-const { singleFlight } = require("./utils/async");
-const { getTextChannel, timestamp } = require("./utils/discord");
-const { isStaff } = require("./utils/permissions");
-const { every } = require("./utils/time");
+const config = require("../config");
+const store = require("../lib/store");
+const { singleFlight } = require("../utils/async");
+const { getTextChannel, timestamp } = require("../utils/discord");
+const { isStaff } = require("../utils/permissions");
+const { every } = require("../utils/time");
 
 const TAG = "🪪 [verificaciones]";
 const STATE = store.create("verificaciones.json", TAG);
@@ -45,7 +45,7 @@ const TICKET_TEXT = (username, expiresAt) =>
   "Para verificarte, vamos a necesitar una foto 📸 de alguna " +
   "identificación 🪪 que diga tu fecha de nacimiento (censurá cualquier otra información) " +
   "y EN LA MISMA IMAGEN algún papel 📄 que diga tu username junto al nombre del servidor.\n\n" +
-  `Tenés hasta <t:${Math.floor(expiresAt / 1000)}:R> para hacerlo, ` +
+  `Tenés hasta ${timestamp(expiresAt, "R")} para hacerlo, ` +
   "luego la solicitud se cerrará y deberás crear una nueva.";
 
 const rejectDm = (retryAt) =>
@@ -206,6 +206,51 @@ function findTicketByUser(userId) {
   }
 
   return null;
+}
+
+async function cancelTicketsForUser(client, user) {
+  const ticket = findTicketByUser(user.id);
+  if (!ticket) return false;
+
+  const label = user.tag ?? user.username ?? user.id;
+
+  logVerification({
+    action: "cancelled",
+    method: "member-leave",
+    target: user,
+    channelId: ticket.channelId
+  });
+
+  let channel = null;
+
+  try {
+    channel = await client.channels.fetch(ticket.channelId);
+  } catch (err) {
+    if (err.code !== 10003) {
+      console.error(
+        `${TAG} ⚠️ no pude revisar ${ticket.channelId}: ${err.message}`
+      );
+      return false;
+    }
+  }
+
+  if (channel) {
+    try {
+      await channel.delete(
+        `Verificación cancelada: ${label} salió del servidor`
+      );
+    } catch (err) {
+      console.error(
+        `${TAG} ⚠️ no pude borrar ${ticket.channelId}: ${err.message}`
+      );
+      return false;
+    }
+  }
+
+  removeTicket(ticket.channelId);
+  console.log(`${TAG} 🚪 ticket de ${label} cancelado por salida del servidor`);
+
+  return true;
 }
 
 function ticketForInteraction(interaction, channelId) {
@@ -579,7 +624,7 @@ async function openTicket(interaction) {
       parent: CATEGORY_ADMIN,
       topic:
         `Verificación de ${user.tag} (${user.id}) · ` +
-        `vence ${timestamp(expiresAt, "f")}`,
+        `vence ${timestamp(expiresAt, "R")}`,
       permissionOverwrites: [...overwrites.values()],
       reason: `Solicitud de verificación de ${user.tag}`
     });
@@ -826,6 +871,16 @@ function start(client) {
     }
   });
 
+  client.on("guildMemberRemove", (member) => {
+    if (!member?.user) return;
+
+    cancelTicketsForUser(client, member.user).catch((err) => {
+      console.error(
+        `${TAG} ⚠️ no pude cancelar la verificación: ${err.message}`
+      );
+    });
+  });
+
   every(SWEEP_MS, () => sweep(client), { first: 0, label: TAG }).unref?.();
   console.log(`${TAG} ✅ panel y tickets de verificación activos`);
 }
@@ -839,6 +894,7 @@ module.exports = {
   acceptTicket,
   rejectTicket,
   cancelTicket,
+  cancelTicketsForUser,
   logVerification,
   consumeExpectedRoleChange,
   isStaff,

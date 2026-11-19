@@ -1,7 +1,7 @@
 const { createStockTracker } = require("./stockTracker");
-const { roles } = require("./config");
+const { roles } = require("../config");
 const produccion = require("./produccion");
-const { USER_AGENT, fetchText } = require("./utils/http");
+const { USER_AGENT, fetchText } = require("../utils/http");
 
 const BASE = "https://astrovials.com";
 const NOTIFY_ROLE_ID = roles.astrovials;

@@ -1,4 +1,4 @@
-const dias = require("../dias");
+const dias = require("../services/dias");
 const { replyEphemeral, updateOrReply } = require("../utils/interactions");
 
 module.exports = {

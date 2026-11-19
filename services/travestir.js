@@ -1,5 +1,5 @@
-const { roles } = require("./config");
-const { hasRole } = require("./utils/permissions");
+const { roles } = require("../config");
+const { hasRole } = require("../utils/permissions");
 
 const TAG = "🏳️‍⚧️ [travestir]";
 

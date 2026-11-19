@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const dado = require("../dado");
+const dado = require("../services/dado");
 
 module.exports = {
   data: new SlashCommandBuilder()

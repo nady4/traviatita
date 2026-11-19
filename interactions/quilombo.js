@@ -1,4 +1,4 @@
-const quilombo = require("../quilombo");
+const quilombo = require("../services/quilombo");
 const { replyEphemeral } = require("../utils/interactions");
 
 module.exports = {

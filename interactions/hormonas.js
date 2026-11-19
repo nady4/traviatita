@@ -1,4 +1,4 @@
-const hormonas = require("../hormonas");
+const hormonas = require("../services/hormonas");
 const { replyEphemeral } = require("../utils/interactions");
 
 module.exports = {

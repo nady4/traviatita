@@ -1,4 +1,4 @@
-const verificaciones = require("../verificaciones");
+const verificaciones = require("../services/verificaciones");
 
 module.exports = {
   async button(interaction) {

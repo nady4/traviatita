@@ -1,5 +1,5 @@
-const { stockSummaryTz } = require('./config');
-const { fmtAge } = require('./utils/time');
+const { stockSummaryTz } = require('../config');
+const { fmtAge } = require('./time');
 
 const DAY_FMT = new Intl.DateTimeFormat('en-CA', {
   timeZone: stockSummaryTz,

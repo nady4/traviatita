@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const astrovials = require("../astrovials");
+const astrovials = require("../services/astrovials");
 const { notifyRow } = require("../ui/stockNotify");
 
 module.exports = {

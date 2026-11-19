@@ -1,8 +1,8 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { create } = require('./store');
-const { timestamp } = require('./utils/discord');
-const { singleFlight } = require('./utils/async');
-const { every } = require('./utils/time');
+const { create } = require('../lib/store');
+const { timestamp } = require('../utils/discord');
+const { singleFlight } = require('../utils/async');
+const { every } = require('../utils/time');
 
 const TAG = '⏰ [hormonas]';
 

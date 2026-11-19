@@ -1,7 +1,7 @@
-const { roles, channels } = require("./config");
+const { roles, channels } = require("../config");
 const verificaciones = require("./verificaciones");
-const { hasRole } = require("./utils/permissions");
-const { sendToChannel } = require("./utils/discord");
+const { hasRole } = require("../utils/permissions");
+const { sendToChannel } = require("../utils/discord");
 
 const TAG = "✅ [verificar]";
 

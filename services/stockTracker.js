@@ -1,11 +1,11 @@
 const { EmbedBuilder } = require("discord.js");
-const { create } = require("./store");
-const { channels, stockCheckMinutes } = require("./config");
-const cal = require("./calendario");
+const { create } = require("../lib/store");
+const { channels, stockCheckMinutes } = require("../config");
+const cal = require("../utils/calendario");
 const produccion = require("./produccion");
-const { sleep, singleFlight } = require("./utils/async");
-const { timestamp, announceStockChange } = require("./utils/discord");
-const { every } = require("./utils/time");
+const { sleep, singleFlight } = require("../utils/async");
+const { timestamp, announceStockChange } = require("../utils/discord");
+const { every } = require("../utils/time");
 
 const STALE_ANNOUNCE_MS = 30 * 60_000;
 

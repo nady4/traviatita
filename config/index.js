@@ -1,5 +1,7 @@
 require("dotenv").config({ quiet: true });
 
+const ids = require("./ids.json");
+
 function required(name) {
   const value = process.env[name];
   if (!value) throw new Error(`Falta ${name} en .env`);
@@ -40,29 +42,10 @@ function timeZone(name, fallback) {
 module.exports = {
   token: required("TOKEN"),
   guildId: optionalSnowflake("GUILD_ID"),
-  roles: {
-    traviatense: snowflake("ROLE_TRAVIATENSE_ID"),
-    bot: snowflake("ROLE_BOT_ID"),
-    admin500kg: snowflake("ROLE_500KG_ID"),
-    admin200kg: snowflake("ROLE_200KG_ID"),
-    admin120kg: snowflake("ROLE_120KG_ID"),
-    verificade: snowflake("ROLE_VERIFICADE_ID"),
-    preso: snowflake("ROLE_PRESO_ID"),
-    cuck: snowflake("ROLE_CUCK_ID"),
-    otokonoko: snowflake("ROLE_OTOKONOKO_ID"),
-    astrovials: snowflake("ROLE_ASTROVIALS_ID")
-  },
-  channels: {
-    quilombo: snowflake("CHANNEL_ANNOUNCE_QUILOMBO_ID"),
-    stock: snowflake("CHANNEL_ANNOUNCE_STOCK_ID"),
-    general: snowflake("CHANNEL_GENERAL_ID"),
-    verificacion: snowflake("CHANNEL_VERIFICACION_ID"),
-    jaula: snowflake("CHANNEL_JAULA_ID"),
-    reglas: snowflake("CHANNEL_REGLAS_ID"),
-    roles: snowflake("CHANNEL_ROLES_ID"),
-    admin: snowflake("CATEGORY_ADMIN_ID")
-  },
+  roles: ids.roles,
+  channels: ids.channels,
   tweetUserId: snowflake("TWEET_USER_ID"),
+  roleGroups: ids.roleGroups,
   tweetCheckMinutes: positiveInt("TWEET_CHECK_MINUTES"),
   stockCheckMinutes: positiveInt("STOCK_CHECK_MINUTES"),
   stockSummaryTz: timeZone("STOCK_SUMMARY_TZ", "America/Argentina/Buenos_Aires"),
