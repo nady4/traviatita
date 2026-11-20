@@ -97,9 +97,9 @@ En el canal `config.channels.roles` el bot publica y mantiene seis mensajes, con
 
 - 🌎 **Roles de país (1/2)**: Argentina, Bolivia, Brasil, Chile, Colombia, Costa Rica, Cuba, Ecuador, El Salvador, Guatemala, Haití y Honduras.
 - 🌎 **Roles de país (2/2)**: México, Nicaragua, Panamá, Paraguay, Perú, Puerto Rico, República Dominicana, Uruguay, Venezuela, España, USA e Israel.
+- ☣️ **Elegí que tan chistose sos jijoooooo**: alto riesgo, riesgo medio y bajo riesgo.
 - 🎙️ **Roles de notificación**: VC, Juegos, Juntadas, Revivir chat, Bumper y Alianzas.
 - 💗 **Roles de identidad**: hombre, mujer, trans, cis, no binarie y repper/pre-hrt.
-- ☣️ **Elegí que tan chistose sos jijoooooo**: alto riesgo, riesgo medio y bajo riesgo.
 - 🗣️ **Pronombres**: él, ella, elle, preguntar y no me hablen.
 
 Cada opción se muestra como `emoji - @rol`, con una mención real al rol pero sin notificar. El bot reacciona con todos los emojis del grupo. Al reaccionar se asigna el rol correspondiente y al quitar la reacción se remueve. El grupo de riesgo es de opción única: al elegir un nivel se quita el anterior; el resto permite acumular roles.
