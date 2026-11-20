@@ -17,7 +17,7 @@ module.exports = {
         if (subscribed) {
           await replyEphemeral(
             interaction,
-            `🔔 Ya estabas suscritx — te seguiré pingheando con los cambios de **${store.name}**.`
+            `🔔 Ya estabas suscritx — te seguiré pingeando con los cambios de **${store.name}**.`
           );
         } else {
           await member.roles.add(roleId, "Alertas de stock: suscripción");

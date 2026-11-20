@@ -108,10 +108,12 @@ async function announceJoin(client, member) {
   const embed = new EmbedBuilder()
     .setColor(0xff8ad8)
     .setImage("attachment://bienvenida.png");
+  const name =
+    member.displayName || member.user.displayName || member.user.username;
 
   await sendToChannel(client, config.channels.general, {
     content:
-      `DENLE LA BIENVENIDA A ${member.user.toString()}!!!!\n` +
+      `DENLE LA BIENVENIDA A ${member.user.toString()} (${name})!!!!\n` +
       `Mirá las <#${config.channels.reglas}>, ponete <#${config.channels.roles}> y portate bien >w<`,
     embeds: [embed],
     files: [file],
@@ -141,7 +143,8 @@ function start(client) {
 
     if (!member?.user || member.user.bot) return;
 
-    const name = member.displayName || member.user.displayName || member.user.username;
+    const name =
+      member.displayName || member.user.displayName || member.user.username;
     try {
       await sendToChannel(client, config.channels.general, {
         content: `${member.user.toString()} (${name}) se fue del server u.u`,
