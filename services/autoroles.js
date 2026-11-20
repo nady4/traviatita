@@ -48,6 +48,10 @@ const GROUPS = config.roleGroups.map((group) => ({
   }))
 }));
 
+const TRACKED_ROLE_IDS = new Set(
+  GROUPS.flatMap((group) => group.roles.map((role) => role.id))
+);
+
 const ID_STORE = store.create("autoroles.json", TAG, { dir: store.repoDataDir() });
 let savedIds = ID_STORE.load({});
 if (!savedIds || typeof savedIds !== "object" || Array.isArray(savedIds)) {
@@ -89,12 +93,21 @@ function forgetMessageId(group) {
   saveIds();
 }
 
-function messagePayload(group) {
+function roleCount(guild, roleId) {
+  return guild?.roles.cache.get(roleId)?.members.size ?? 0;
+}
+
+function messagePayload(group, guild) {
   const embed = new EmbedBuilder()
     .setColor(group.color)
     .setTitle(group.title)
     .setDescription(
-      group.roles.map((role) => `${role.emoji} - <@&${role.id}>`).join("\n")
+      group.roles
+        .map(
+          (role) =>
+            `${role.emoji} - <@&${role.id}> (**${roleCount(guild, role.id)}**)`
+        )
+        .join("\n")
     )
     .setFooter({
       text: "Reaccioná con un emoji para recibir o quitar el rol."
@@ -172,6 +185,12 @@ async function findExistingMessages(client, channel) {
   return found;
 }
 
+async function ensureMemberCache(guild) {
+  if (!guild) return;
+  if (guild.members.cache.size >= guild.memberCount) return;
+  await guild.members.fetch();
+}
+
 async function ensureMessage(client, channel, group) {
   const storedId = storedMessageId(group);
   let message = null;
@@ -188,11 +207,11 @@ async function ensureMessage(client, channel, group) {
   }
 
   if (!message) {
-    message = await channel.send(messagePayload(group));
+    message = await channel.send(messagePayload(group, channel.guild));
     rememberMessageId(group, message.id);
     console.log(`${TAG} ✅ "${group.title}" publicado en <#${channel.id}>`);
   } else {
-    await message.edit(messagePayload(group)).catch((err) => {
+    await message.edit(messagePayload(group, channel.guild)).catch((err) => {
       console.error(`${TAG} ⚠️ no pude actualizar "${group.title}":`, err.message);
     });
   }
@@ -211,6 +230,14 @@ async function ensureMessage(client, channel, group) {
 
 const ensureAll = singleFlight(async (client) => {
   const channel = await getTextChannel(client, config.channels.roles);
+
+  await ensureMemberCache(channel.guild).catch((err) => {
+    console.error(
+      `${TAG} ⚠️ no pude cargar los miembros para los contadores:`,
+      err.message
+    );
+  });
+
   const missing = GROUPS.some((group) => !storedMessageId(group));
   const existing = missing
     ? await findExistingMessages(client, channel)
@@ -247,6 +274,101 @@ const ensureAll = singleFlight(async (client) => {
     `${TAG} ✅ mensajes de autoasignación listos en <#${config.channels.roles}>`
   );
 });
+
+function changedRoleIds(oldMember, newMember) {
+  const ids = new Set();
+
+  for (const id of oldMember.roles.cache.keys()) {
+    if (!newMember.roles.cache.has(id)) ids.add(id);
+  }
+
+  for (const id of newMember.roles.cache.keys()) {
+    if (!oldMember.roles.cache.has(id)) ids.add(id);
+  }
+
+  return ids;
+}
+
+async function refreshRoleCounts(client, roleIds) {
+  const channel = await getTextChannel(client, config.channels.roles);
+  const groups = GROUPS.filter((group) =>
+    group.roles.some((role) => roleIds.has(role.id))
+  );
+
+  if (groups.length === 0) return;
+
+  for (const group of groups) {
+    try {
+      const storedId = storedMessageId(group);
+
+      if (!storedId) {
+        await ensureMessage(client, channel, group);
+        continue;
+      }
+
+      const message = await channel.messages.fetch(storedId);
+
+      if (message.author.id !== client.user.id) {
+        forgetMessageId(group);
+        await ensureMessage(client, channel, group);
+        continue;
+      }
+
+      await message.edit(messagePayload(group, channel.guild));
+    } catch (err) {
+      if (err.code === 10008) {
+        forgetMessageId(group);
+        await ensureMessage(client, channel, group).catch((error) => {
+          console.error(
+            `${TAG} ⚠️ no pude reponer "${group.title}" al actualizar contadores:`,
+            error.message
+          );
+        });
+        continue;
+      }
+
+      console.error(
+        `${TAG} ⚠️ no pude actualizar contadores de "${group.title}":`,
+        err.message
+      );
+    }
+  }
+
+  console.log(
+    `${TAG} 🔢 contadores actualizados en ${groups.length} mensaje(s)`
+  );
+}
+
+const pendingRoleIds = new Set();
+let refreshTimer = null;
+let refreshQueue = Promise.resolve();
+let countsReady = false;
+
+function scheduleCountRefresh(client, roleIds) {
+  if (!countsReady) return;
+
+  let relevant = false;
+
+  for (const id of roleIds) {
+    if (!TRACKED_ROLE_IDS.has(id)) continue;
+    pendingRoleIds.add(id);
+    relevant = true;
+  }
+
+  if (!relevant || refreshTimer) return;
+
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    const ids = new Set(pendingRoleIds);
+    pendingRoleIds.clear();
+
+    refreshQueue = refreshQueue
+      .then(() => refreshRoleCounts(client, ids))
+      .catch((err) => {
+        console.error(`${TAG} ⚠️ error al actualizar contadores:`, err.message);
+      });
+  }, 750);
+}
 
 function emojiKey(emoji) {
   return String(emoji ?? "").replace(/\uFE0F/g, "");
@@ -333,6 +455,18 @@ function start(client) {
     });
   });
 
+  client.on("guildMemberUpdate", (oldMember, newMember) => {
+    scheduleCountRefresh(client, changedRoleIds(oldMember, newMember));
+  });
+
+  client.on("guildMemberAdd", (member) => {
+    scheduleCountRefresh(client, member.roles.cache.keys());
+  });
+
+  client.on("guildMemberRemove", (member) => {
+    scheduleCountRefresh(client, member.roles.cache.keys());
+  });
+
   client.on("messageDelete", (message) => {
     const group = GROUPS.find((item) => storedMessageId(item) === message.id);
     if (!group) return;
@@ -344,9 +478,13 @@ function start(client) {
     });
   });
 
-  ensureAll(client).catch((err) => {
-    console.error(`${TAG} ⚠️ no pude preparar los mensajes:`, err.message);
-  });
+  ensureAll(client)
+    .finally(() => {
+      countsReady = true;
+    })
+    .catch((err) => {
+      console.error(`${TAG} ⚠️ no pude preparar los mensajes:`, err.message);
+    });
 
   console.log(`${TAG} 💾 IDs de mensajes en ${ID_STORE.FILE}`);
   console.log(`${TAG} ✅ autoasignación de roles por reacción activa`);
