@@ -172,72 +172,6 @@ async function findExistingMessages(client, channel) {
   return found;
 }
 
-function bySnowflake(a, b) {
-  const left = BigInt(a.id);
-  const right = BigInt(b.id);
-  return left < right ? -1 : left > right ? 1 : 0;
-}
-
-async function enforceOrder(client, channel, messages) {
-  const ordered = messages.filter(Boolean).sort(bySnowflake);
-  if (ordered.length !== GROUPS.length) return;
-
-  const entries = GROUPS.map((group) => ({
-    group,
-    id: storedMessageId(group)
-  }));
-  const ids = ordered.map((message) => message.id);
-
-  let keep = 0;
-  let lastIndex = -1;
-
-  for (const { id } of entries) {
-    const index = ids.indexOf(id);
-    if (index <= lastIndex) break;
-    lastIndex = index;
-    keep += 1;
-  }
-
-  if (keep === entries.length) return;
-
-  const toRepost = entries.slice(keep);
-  const idsToDelete = new Set(toRepost.map((entry) => entry.id));
-  const deleted = new Set();
-
-  console.log(
-    `${TAG} 🔄 reordenando ${toRepost.length} mensaje(s) para respetar el orden configurado`
-  );
-
-  for (const message of ordered) {
-    if (!idsToDelete.has(message.id)) continue;
-
-    try {
-      await message.delete();
-      deleted.add(message.id);
-    } catch (err) {
-      console.error(
-        `${TAG} ⚠️ no pude borrar ${message.id} para reordenar:`,
-        err.message
-      );
-    }
-  }
-
-  for (const { group, id } of toRepost) {
-    if (!deleted.has(id)) continue;
-
-    forgetMessageId(group);
-
-    try {
-      await ensureMessage(client, channel, group);
-    } catch (err) {
-      console.error(
-        `${TAG} ⚠️ no pude repostear "${group.title}":`,
-        err.message
-      );
-    }
-  }
-}
-
 async function ensureMessage(client, channel, group) {
   const storedId = storedMessageId(group);
   let message = null;
@@ -298,24 +232,15 @@ const ensureAll = singleFlight(async (client) => {
     console.log(`${TAG} 🔗 ${adopted} mensaje(s) existente(s) reutilizados`);
   }
 
-  const messages = [];
-
   for (const group of GROUPS) {
     try {
-      messages.push(await ensureMessage(client, channel, group));
+      await ensureMessage(client, channel, group);
     } catch (err) {
-      messages.push(null);
       console.error(
         `${TAG} ⚠️ no pude preparar "${group.title}":`,
         err.message
       );
     }
-  }
-
-  try {
-    await enforceOrder(client, channel, messages);
-  } catch (err) {
-    console.error(`${TAG} ⚠️ no pude reordenar los mensajes:`, err.message);
   }
 
   console.log(

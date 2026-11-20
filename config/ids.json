@@ -62,17 +62,6 @@
       ]
     },
     {
-      "id": "riesgo",
-      "title": "Elegí que tan chistose sos jijoooooo",
-      "color": 15105570,
-      "single": true,
-      "roles": [
-        { "name": "alto riesgo", "id": "1527108995716747339", "emoji": ":biohazard:" },
-        { "name": "riesgo medio", "id": "1527108997352525994", "emoji": ":radioactive:" },
-        { "name": "bajo riesgo", "id": "1527109001991553074", "emoji": ":mobile_phone_off:" }
-      ]
-    },
-    {
       "id": "notificaciones",
       "title": "Roles de notificación",
       "color": 5793266,
@@ -96,6 +85,17 @@
         { "name": "cis", "id": "1527109005716230225", "emoji": ":green_heart:" },
         { "name": "no binarie", "id": "1527109006357696644", "emoji": ":yellow_heart:" },
         { "name": "repper/pre-hrt", "id": "1527109007863713922", "emoji": ":heart:" }
+      ]
+    },
+    {
+      "id": "riesgo",
+      "title": "Elegí que tan chistose sos jijoooooo",
+      "color": 15105570,
+      "single": true,
+      "roles": [
+        { "name": "alto riesgo", "id": "1527108995716747339", "emoji": ":biohazard:" },
+        { "name": "riesgo medio", "id": "1527108997352525994", "emoji": ":radioactive:" },
+        { "name": "bajo riesgo", "id": "1527109001991553074", "emoji": ":mobile_phone_off:" }
       ]
     },
     {
