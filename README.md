@@ -97,14 +97,14 @@ En el canal `config.channels.roles` el bot publica y mantiene seis mensajes, con
 
 - 🌎 **Roles de país (1/2)**: Argentina, Bolivia, Brasil, Chile, Colombia, Costa Rica, Cuba, Ecuador, El Salvador, Guatemala, Haití y Honduras.
 - 🌎 **Roles de país (2/2)**: México, Nicaragua, Panamá, Paraguay, Perú, Puerto Rico, República Dominicana, Uruguay, Venezuela, España, USA e Israel.
+- ☣️ **Elegí que tan chistose sos jijoooooo**: alto riesgo, riesgo medio y bajo riesgo.
 - 🎙️ **Roles de notificación**: VC, Juegos, Juntadas, Revivir chat, Bumper y Alianzas.
 - 💗 **Roles de identidad**: hombre, mujer, trans, cis, no binarie y repper/pre-hrt.
-- ☣️ **Elegí que tan chistose sos jijoooooo**: alto riesgo, riesgo medio y bajo riesgo.
 - 🗣️ **Pronombres**: él, ella, elle, preguntar y no me hablen.
 
-Cada opción se muestra como `emoji - nombre` y el bot reacciona con todos los emojis del grupo. Al reaccionar se asigna el rol correspondiente y al quitar la reacción se remueve. El grupo de riesgo es de opción única: al elegir un nivel se quita el anterior; el resto permite acumular roles.
+Cada opción se muestra como `emoji - @rol`, con una mención real al rol pero sin notificar. El bot reacciona con todos los emojis del grupo. Al reaccionar se asigna el rol correspondiente y al quitar la reacción se remueve. El grupo de riesgo es de opción única: al elegir un nivel se quita el anterior; el resto permite acumular roles.
 
-Los IDs de los seis mensajes se guardan en `data/autoroles.json`, fuera de `STATE_DIR`, y se versionan en el repositorio. Si no encuentra un ID, busca el mensaje existente en el canal por título y descripción antes de publicar uno nuevo, así no se duplican al reiniciar ni en la nube. Después del primer arranque, commiteá `data/autoroles.json` para conservar los IDs entre despliegues. Si el orden quedó viejo, el bot repostea solo los mensajes necesarios para dejar los países arriba. Si un mensaje se borra, el bot lo repone una sola vez y actualiza su ID. Las reacciones de bots se ignoran.
+Los IDs de los seis mensajes se guardan en `data/autoroles.json`, fuera de `STATE_DIR`, y se versionan en el repositorio. Si no encuentra un ID, busca el mensaje existente en el canal por título y descripción antes de publicar uno nuevo, así no se duplican al reiniciar ni en la nube. Después del primer arranque, commiteá `data/autoroles.json` para conservar los IDs entre despliegues. Si el orden quedó viejo, el bot repostea solo los mensajes necesarios para respetar el orden configurado. Si un mensaje se borra, el bot lo repone una sola vez y actualiza su ID. Las reacciones de bots se ignoran.
 
 <br>
 

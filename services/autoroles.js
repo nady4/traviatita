@@ -94,13 +94,13 @@ function messagePayload(group) {
     .setColor(group.color)
     .setTitle(group.title)
     .setDescription(
-      group.roles.map((role) => `${role.emoji} - ${role.name}`).join("\n")
+      group.roles.map((role) => `${role.emoji} - <@&${role.id}>`).join("\n")
     )
     .setFooter({
       text: "Reaccioná con un emoji para recibir o quitar el rol."
     });
 
-  return { embeds: [embed] };
+  return { embeds: [embed], allowedMentions: { parse: [] } };
 }
 
 function normalizeText(value) {
@@ -112,19 +112,26 @@ function normalizeText(value) {
     .toLowerCase();
 }
 
-function groupSignature(group) {
-  return normalizeText(
-    group.roles.map((role) => `${role.emoji} - ${role.name}`).join("\n")
-  );
+function matchesRoleLine(description, role) {
+  const prefix = `${normalizeText(role.emoji)} - `;
+  const name = normalizeText(role.name);
+  const mention = `<@&${role.id}>`;
+
+  return String(description ?? "")
+    .split("\n")
+    .map(normalizeText)
+    .some(
+      (line) =>
+        line.startsWith(prefix) &&
+        (line.includes(mention) || line.includes(name))
+    );
 }
 
 function matchesGroup(message, group) {
-  const signature = groupSignature(group);
-
   return (message.embeds ?? []).some(
     (embed) =>
       normalizeText(embed.title) === normalizeText(group.title) &&
-      normalizeText(embed.description) === signature
+      group.roles.every((role) => matchesRoleLine(embed.description, role))
   );
 }
 
@@ -198,7 +205,7 @@ async function enforceOrder(client, channel, messages) {
   const deleted = new Set();
 
   console.log(
-    `${TAG} 🔄 reordenando ${toRepost.length} mensaje(s) para dejar los países arriba`
+    `${TAG} 🔄 reordenando ${toRepost.length} mensaje(s) para respetar el orden configurado`
   );
 
   for (const message of ordered) {
