@@ -11,6 +11,7 @@ const verificaciones = require("../services/verificaciones");
 const tweets = require("../services/tweets");
 const autoroles = require("../services/autoroles");
 const logs = require("../services/logs");
+const spam = require("../services/spam");
 
 module.exports = {
   name: Events.ClientReady,
@@ -31,5 +32,6 @@ module.exports = {
     tweets.start(client);
     autoroles.start(client);
     logs.start(client);
+    spam.start(client);
   }
 };

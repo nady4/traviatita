@@ -124,6 +124,12 @@ El contenido de los mensajes requiere el intent privilegiado **Message Content**
 
 <br>
 
+## 🚫 Anti-spam
+
+Cuando une misma persona envía el mismo contenido (texto y adjuntos idénticos) **3 veces en menos de 30 segundos**, el bot borra esos mensajes, le quita los roles traviatense y 100kg, le asigna el rol preso y avisa en `config.channels.staff` con un embed que incluye al usuario, la cantidad de mensajes detectados y eliminados, si quedó enjaulade y el contenido repetido. No se enjaula a la owner, a bots, ni a miembros con un rol igual o superior al del bot.
+
+<br>
+
 ## 🪪 Verificación por ticket
 
 El sistema de verificación por ticket está **deshabilitado por defecto** (`VERIFICATION_ENABLED=false`). El código del panel, los tickets temporales, los vencimientos y los logs se conserva en `services/verificaciones.js`, `services/verificar.js` e `interactions/verificacion.js` para poder reactivarlo en el futuro con `VERIFICATION_ENABLED=true`.
@@ -185,6 +191,7 @@ services/
   miembros.js            Seguimiento diario de entradas/salidas y anuncios de bienvenida/despedida
   autoroles.js           Autoasignación de roles por reacción en el canal de roles
   logs.js                Registro de mensajes, voz y miembros en el canal de logs
+  spam.js                Detección de spam repetido, borrado, enjaulamiento y aviso al staff
   travestir.js           Asignación del rol traviatense
   verificar.js           Asignación del rol 100kg y anuncio en el canal general (deshabilitado)
   verificaciones.js      Panel, tickets temporales, vencimiento y logs de verificación (deshabilitado)
