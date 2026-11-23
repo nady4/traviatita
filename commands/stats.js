@@ -117,7 +117,7 @@ function buildEmbed(guild, stats) {
         value:
           `👑 Owner: <@${owner}>\n` +
           `🛡️ 200kg (**${numberFmt.format(stats.admin200kg.length)}**): ${mentionList(stats.admin200kg)}\n` +
-          `🔑 150kg (**${numberFmt.format(stats.admin150kg.length)}**): ${mentionList(stats.admin150kg)}` +
+          `🔑 150kg (**${numberFmt.format(stats.admin150kg.length)}**): ${mentionList(stats.admin150kg)}\n` +
           `✅ 100kg: **${numberFmt.format(stats.verificado100kg)}**\n` +
           `🏳️‍⚧️ Traviatenses: **${numberFmt.format(stats.traviatense)}**\n` +
           `🔒 Presos (**${numberFmt.format(stats.preso.length)}**): ${mentionList(stats.preso)}\n` +
