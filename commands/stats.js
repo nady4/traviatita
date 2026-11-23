@@ -121,7 +121,7 @@ function buildEmbed(guild, stats) {
           `✅ 100kg: **${numberFmt.format(stats.verificado100kg)}**\n` +
           `🏳️‍⚧️ Traviatenses: **${numberFmt.format(stats.traviatense)}**\n` +
           `🔒 Presos (**${numberFmt.format(stats.preso.length)}**): ${mentionList(stats.preso)}\n` +
-          `🐂 Cucks (**${numberFmt.format(stats.cuck.length)}**): ${mentionList(stats.cuck)}\n`
+          `🐂 Cucks (**${numberFmt.format(stats.cuck.length)}**): ${mentionList(stats.cuck)}\n\n`
       },
       {
         name: "🚪 Movimiento de miembros",
