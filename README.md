@@ -76,6 +76,7 @@ Los IDs de canales, roles y emojis están en `config/ids.json`, versionado en el
 | 📊 `/stats`          | Muestra miembros, roles, altas y bajas, stock y racha sin quilombos.                                      |
 | 🏳️‍⚧️ `/travestir`      | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg).                              |
 | ⬆️ `/ascender <usuario>` | Asciende a un miembro: le da 100kg si no tiene rol, o 150kg si tiene 100kg (solo 200kg/500kg). |
+| ⬇️ `/descender <usuario>` | Desciende a un miembro: le da 100kg si tiene 150kg, o le quita el rol si tiene 100kg (solo 200kg/500kg). |
 | 🔒 `/enjaular <usuario>` | Quita los roles traviatense y 100kg, asigna el rol preso, anuncia en general y da la bienvenida en el canal de presos (solo rol 200kg). |
 | 🔓 `/desenjaular <usuario>` | Quita el rol preso, devuelve el rol traviatense, anuncia en general y se despide en el canal de presos (solo rol 200kg). |
 | 🐂 `/cuckear <usuario>` | Quita los roles traviatense y 100kg, asigna el rol cuck y anuncia en general que sólo puede ver el servidor (solo rol 200kg). |
