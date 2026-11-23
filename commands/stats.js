@@ -48,8 +48,10 @@ async function memberStats(guild) {
     if (member.roles.cache.has(roles.cuck)) data.cuck.push(member.id);
     if (member.roles.cache.has(roles.otokonoko)) data.otokonoko++;
     if (member.roles.cache.has(roles.astrovials)) data.astrovials++;
-    if (member.roles.cache.has(roles.admin200kg)) data.admin200kg.push(member.id);
-    if (member.roles.cache.has(roles.admin150kg)) data.admin150kg.push(member.id);
+    if (member.roles.cache.has(roles.admin200kg))
+      data.admin200kg.push(member.id);
+    if (member.roles.cache.has(roles.admin150kg))
+      data.admin150kg.push(member.id);
   }
 
   memberCache.set(guild.id, { at: Date.now(), data });
@@ -104,10 +106,7 @@ function buildEmbed(guild, stats) {
         name: "👥 Comunidad",
         value:
           `Miembros: **${numberFmt.format(stats.total)}**\n` +
-          `Humanos: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**\n` +
-          `👑 Owner: <@${owner}>\n` +
-          `🛡️ 200kg (**${numberFmt.format(stats.admin200kg.length)}**): ${mentionList(stats.admin200kg)}\n` +
-          `🔑 150kg (**${numberFmt.format(stats.admin150kg.length)}**): ${mentionList(stats.admin150kg)}`
+          `Humanos: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**\n`
       },
       {
         name: "\u200b",
@@ -116,23 +115,25 @@ function buildEmbed(guild, stats) {
       {
         name: "🏷️ Roles",
         value:
-          `🏳️‍⚧️ Traviatenses: **${numberFmt.format(stats.traviatense)}**\n` +
+          `👑 Owner: <@${owner}>\n` +
+          `🛡️ 200kg (**${numberFmt.format(stats.admin200kg.length)}**): ${mentionList(stats.admin200kg)}\n` +
+          `🔑 150kg (**${numberFmt.format(stats.admin150kg.length)}**): ${mentionList(stats.admin150kg)}` +
           `✅ 100kg: **${numberFmt.format(stats.verificado100kg)}**\n` +
+          `🏳️‍⚧️ Traviatenses: **${numberFmt.format(stats.traviatense)}**\n` +
           `🔒 Presos (**${numberFmt.format(stats.preso.length)}**): ${mentionList(stats.preso)}\n` +
-          `🐂 Cucks (**${numberFmt.format(stats.cuck.length)}**): ${mentionList(stats.cuck)}\n` +
-          `💊 Suscriptes Otokonoko: **${numberFmt.format(stats.otokonoko)}**\n` +
-          `🚀 Suscriptes Astrovials: **${numberFmt.format(stats.astrovials)}**${SECTION_GAP}`
+          `🐂 Cucks (**${numberFmt.format(stats.cuck.length)}**): ${mentionList(stats.cuck)}\n`
       },
       {
         name: "🚪 Movimiento de miembros",
-        value: [
-          movementLine("Hoy", movement.today),
-          movementLine("Esta semana", movement.week),
-          movementLine("Este mes", movement.month)
-        ].join("\n") + SECTION_GAP
+        value:
+          [
+            movementLine("Hoy", movement.today),
+            movementLine("Esta semana", movement.week),
+            movementLine("Este mes", movement.month)
+          ].join("\n") + SECTION_GAP
       },
       {
-        name: "📦 Stock",
+        name: "📦 Stock de estrógeno",
         value:
           `${stockLine("💊 Otokonoko", otokonoko.getProductState(), otokonoko.PRODUCTS)}\n` +
           `${stockLine("🚀 Astrovials", astrovials.getProductState(), astrovials.PRODUCTS)}`
