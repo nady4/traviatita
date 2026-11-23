@@ -5,10 +5,9 @@ const { sendToChannel } = require("../utils/discord");
 
 const TAG = "✅ [verificar]";
 
-const ROLE_VERIFICADE = roles.verificade;
+const ROLE_100KG = roles.verificado100kg;
 const ROLE_200KG = roles.admin200kg;
 const CHANNEL_GENERAL = channels.general;
-const CHANNEL_VERIFICACION = channels.verificacion;
 
 const pending = new Set();
 
@@ -17,10 +16,7 @@ function canUse(interaction) {
 }
 
 function announcement(member) {
-  return (
-    `✅ <@${member.id}> se ha verificado y ahora tiene acceso a los canales NSFW.\n` +
-    `Para verificarte también crea un ticket en <#${CHANNEL_VERIFICACION}>.`
-  );
+  return `✅ <@${member.id}> se ha verificado y ahora tiene acceso a los canales NSFW.`;
 }
 
 async function announce(client, member) {
@@ -40,8 +36,8 @@ function unmarkCommand(memberId) {
 
 function start(client) {
   client.on("guildMemberUpdate", async (oldMember, newMember) => {
-    if (oldMember.roles.cache.has(ROLE_VERIFICADE)) return;
-    if (!newMember.roles.cache.has(ROLE_VERIFICADE)) return;
+    if (oldMember.roles.cache.has(ROLE_100KG)) return;
+    if (!newMember.roles.cache.has(ROLE_100KG)) return;
     if (pending.delete(newMember.id)) return;
 
     const fromTicket = verificaciones.consumeExpectedRoleChange(
@@ -72,10 +68,9 @@ function start(client) {
 }
 
 module.exports = {
-  ROLE_VERIFICADE,
+  ROLE_100KG,
   ROLE_200KG,
   CHANNEL_GENERAL,
-  CHANNEL_VERIFICACION,
   canUse,
   announcement,
   announce,

@@ -5,7 +5,7 @@ const { defineCommand } = require("../utils/command");
 
 const ROLE_200KG = roles.admin200kg;
 const ROLE_TRAVIATENSE = roles.traviatense;
-const ROLE_VERIFICADE = roles.verificade;
+const ROLE_100KG = roles.verificado100kg;
 const ROLE_CUCK = roles.cuck;
 const CHANNEL_GENERAL = channels.general;
 
@@ -32,7 +32,7 @@ module.exports = defineCommand({
       tag: "🐂 [cuckear]",
       reasonPrefix: "Cuckeado",
       roleId: ROLE_CUCK,
-      rolesToRemove: [ROLE_TRAVIATENSE, ROLE_VERIFICADE],
+      rolesToRemove: [ROLE_TRAVIATENSE, ROLE_100KG],
       announcements: (member) => [
         {
           channelId: CHANNEL_GENERAL,

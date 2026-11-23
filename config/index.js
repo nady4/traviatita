@@ -46,6 +46,7 @@ module.exports = {
   channels: ids.channels,
   tweetUserId: snowflake("TWEET_USER_ID"),
   roleGroups: ids.roleGroups,
+  verificationEnabled: process.env.VERIFICATION_ENABLED === "true",
   tweetCheckMinutes: positiveInt("TWEET_CHECK_MINUTES"),
   stockCheckMinutes: positiveInt("STOCK_CHECK_MINUTES"),
   stockSummaryTz: timeZone("STOCK_SUMMARY_TZ", "America/Argentina/Buenos_Aires"),

@@ -1,4 +1,5 @@
 const { Events } = require("discord.js");
+const config = require("../config");
 const otokonoko = require("../services/otokonoko");
 const astrovials = require("../services/astrovials");
 const resumenes = require("../services/resumenes");
@@ -23,8 +24,10 @@ module.exports = {
     hormonas.start(client);
     miembros.start(client);
     travestir.start(client);
-    verificar.start(client);
-    verificaciones.start(client);
+    if (config.verificationEnabled) {
+      verificar.start(client);
+      verificaciones.start(client);
+    }
     tweets.start(client);
     autoroles.start(client);
     logs.start(client);

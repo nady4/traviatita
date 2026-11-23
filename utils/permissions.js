@@ -3,7 +3,7 @@ const config = require("../config");
 const STAFF_ROLES = [
   config.roles.admin500kg,
   config.roles.admin200kg,
-  config.roles.admin120kg
+  config.roles.admin150kg
 ];
 
 function roleCache(interaction) {

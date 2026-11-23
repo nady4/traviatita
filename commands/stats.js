@@ -26,13 +26,13 @@ async function memberStats(guild) {
     humans: 0,
     bots: 0,
     traviatense: 0,
-    verificade: 0,
+    verificado100kg: 0,
     preso: [],
     cuck: [],
     otokonoko: 0,
     astrovials: 0,
     admin200kg: [],
-    admin120kg: []
+    admin150kg: []
   };
 
   for (const member of members.values()) {
@@ -43,13 +43,13 @@ async function memberStats(guild) {
     data.humans++;
 
     if (member.roles.cache.has(roles.traviatense)) data.traviatense++;
-    if (member.roles.cache.has(roles.verificade)) data.verificade++;
+    if (member.roles.cache.has(roles.verificado100kg)) data.verificado100kg++;
     if (member.roles.cache.has(roles.preso)) data.preso.push(member.id);
     if (member.roles.cache.has(roles.cuck)) data.cuck.push(member.id);
     if (member.roles.cache.has(roles.otokonoko)) data.otokonoko++;
     if (member.roles.cache.has(roles.astrovials)) data.astrovials++;
     if (member.roles.cache.has(roles.admin200kg)) data.admin200kg.push(member.id);
-    if (member.roles.cache.has(roles.admin120kg)) data.admin120kg.push(member.id);
+    if (member.roles.cache.has(roles.admin150kg)) data.admin150kg.push(member.id);
   }
 
   memberCache.set(guild.id, { at: Date.now(), data });
@@ -106,8 +106,8 @@ function buildEmbed(guild, stats) {
           `Miembros: **${numberFmt.format(stats.total)}**\n` +
           `Humanos: **${numberFmt.format(stats.humans)}** · Bots: **${numberFmt.format(stats.bots)}**\n` +
           `👑 Owner: <@${owner}>\n` +
-          `🛡️ Rol 200kg (**${numberFmt.format(stats.admin200kg.length)}**): ${mentionList(stats.admin200kg)}\n` +
-          `🔑 Rol 120kg (**${numberFmt.format(stats.admin120kg.length)}**): ${mentionList(stats.admin120kg)}`
+          `🛡️ 200kg (**${numberFmt.format(stats.admin200kg.length)}**): ${mentionList(stats.admin200kg)}\n` +
+          `🔑 150kg (**${numberFmt.format(stats.admin150kg.length)}**): ${mentionList(stats.admin150kg)}`
       },
       {
         name: "\u200b",
@@ -117,7 +117,7 @@ function buildEmbed(guild, stats) {
         name: "🏷️ Roles",
         value:
           `🏳️‍⚧️ Traviatenses: **${numberFmt.format(stats.traviatense)}**\n` +
-          `✅ Verificades: **${numberFmt.format(stats.verificade)}**\n` +
+          `✅ 100kg: **${numberFmt.format(stats.verificado100kg)}**\n` +
           `🔒 Presos (**${numberFmt.format(stats.preso.length)}**): ${mentionList(stats.preso)}\n` +
           `🐂 Cucks (**${numberFmt.format(stats.cuck.length)}**): ${mentionList(stats.cuck)}\n` +
           `💊 Suscriptes Otokonoko: **${numberFmt.format(stats.otokonoko)}**\n` +

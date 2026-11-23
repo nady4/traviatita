@@ -75,10 +75,10 @@ Los IDs de canales, roles y emojis están en `config/ids.json`, versionado en el
 | 🎲 `/dado`           | Tira dados d3–d100, un dX personalizado o un número al azar en un rango.                                  |
 | 📊 `/stats`          | Muestra miembros, roles, altas y bajas, stock y racha sin quilombos.                                      |
 | 🏳️‍⚧️ `/travestir`      | Asigna el rol traviatense a todo el servidor, excepto bots (solo rol 200kg).                              |
-| ✅ `/verificar <usuario>` | Verifica a un miembro con el rol verificade y anuncia en el canal general que ya tiene acceso a los canales NSFW (solo rol 200kg). |
-| 🔒 `/enjaular <usuario>` | Quita los roles traviatense y verificade, asigna el rol preso, anuncia en general y da la bienvenida en el canal de presos (solo rol 200kg). |
+| ⬆️ `/ascender <usuario>` | Asciende a un miembro: le da 100kg si no tiene rol, o 150kg si tiene 100kg (solo 200kg/500kg). |
+| 🔒 `/enjaular <usuario>` | Quita los roles traviatense y 100kg, asigna el rol preso, anuncia en general y da la bienvenida en el canal de presos (solo rol 200kg). |
 | 🔓 `/desenjaular <usuario>` | Quita el rol preso, devuelve el rol traviatense, anuncia en general y se despide en el canal de presos (solo rol 200kg). |
-| 🐂 `/cuckear <usuario>` | Quita los roles traviatense y verificade, asigna el rol cuck y anuncia en general que sólo puede ver el servidor (solo rol 200kg). |
+| 🐂 `/cuckear <usuario>` | Quita los roles traviatense y 100kg, asigna el rol cuck y anuncia en general que sólo puede ver el servidor (solo rol 200kg). |
 | 🐱 `/github`         | Muestra el repositorio de GitHub del proyecto.                                                            |
 
 <br>
@@ -125,13 +125,7 @@ El contenido de los mensajes requiere el intent privilegiado **Message Content**
 
 ## 🪪 Verificación por ticket
 
-El canal configurado en `config.channels.verificacion` mantiene un panel con el botón **Verificarme**. Al tocarlo se crea un canal `verificacion-{username}` dentro de `config.channels.admin`, visible para quien lo pidió, el owner, los roles 500kg/200kg/120kg y el bot. El mensaje inicial menciona al usuario y a los tres roles del staff.
-
-El tiempo restante usa el formato de timestamp de Discord (`<t:...:R>`), que se actualiza solo sin editar el mensaje; el tópico del canal también muestra el vencimiento con ese formato. No hay tareas periódicas que editen el ticket.
-
-La solicitud pide una foto de una identificación con la fecha de nacimiento y, en la misma imagen, un papel con el username y el nombre del servidor. El usuario, el owner y el staff pueden cancelarla; el owner y el staff pueden aceptarla o rechazarla. Aceptar asigna el rol verificade y el listener existente publica el anuncio en el canal general. Rechazar o dejar vencer la solicitud avisa por DM y borra el canal.
-
-Un usuario no puede tener más de una solicitud abierta y quienes ya tienen el rol verificade no pueden crear otra. Si la persona sale del servidor, su solicitud abierta se cancela y se borra el canal automáticamente. Los tickets vencen a las 48 horas y el mensaje muestra el tiempo restante en formato relativo. El bot revisa y borra los vencidos cada 5 minutos, incluso después de un reinicio. El panel también se repone automáticamente si falta. Las verificaciones aceptadas (por ticket, comando o asignación manual), los rechazos, las cancelaciones y los vencimientos quedan en `verificaciones-log.json`, sin publicarse en Discord.
+El sistema de verificación por ticket está **deshabilitado por defecto** (`VERIFICATION_ENABLED=false`). El código del panel, los tickets temporales, los vencimientos y los logs se conserva en `services/verificaciones.js`, `services/verificar.js` e `interactions/verificacion.js` para poder reactivarlo en el futuro con `VERIFICATION_ENABLED=true`.
 
 <br>
 
@@ -191,8 +185,8 @@ services/
   autoroles.js           Autoasignación de roles por reacción en el canal de roles
   logs.js                Registro de mensajes, voz y miembros en el canal de logs
   travestir.js           Asignación del rol traviatense
-  verificar.js           Asignación del rol verificade y anuncio en el canal general
-  verificaciones.js      Panel, tickets temporales, vencimiento y logs de verificación
+  verificar.js           Asignación del rol 100kg y anuncio en el canal general (deshabilitado)
+  verificaciones.js      Panel, tickets temporales, vencimiento y logs de verificación (deshabilitado)
   tweets.js              Detección de tweets publicados y respuesta en el canal
 data/
   autoroles.json         IDs de los mensajes de autoasignación (versionado)

@@ -19,11 +19,11 @@ const TAG = "🪪 [verificaciones]";
 const STATE = store.create("verificaciones.json", TAG);
 const LOG_STORE = store.create("verificaciones-log.json", TAG);
 
-const VERIFIED_ROLE = config.roles.verificade;
+const VERIFIED_ROLE = config.roles.verificado100kg;
 const STAFF_ROLES = [
   config.roles.admin500kg,
   config.roles.admin200kg,
-  config.roles.admin120kg
+  config.roles.admin150kg
 ];
 const CHANNEL_VERIFICACION = config.channels.verificacion;
 const CATEGORY_ADMIN = config.channels.admin;
@@ -186,7 +186,7 @@ function ticketPayload(user, channelId, expiresAt) {
       `<@${user.id}> ` +
       `<@&${config.roles.admin500kg}> ` +
       `<@&${config.roles.admin200kg}> ` +
-      `<@&${config.roles.admin120kg}>`,
+      `<@&${config.roles.admin150kg}>`,
     embeds: [ticketEmbed(user.username, expiresAt)],
     components: [ticketButtons(channelId)],
     allowedMentions: {
@@ -194,7 +194,7 @@ function ticketPayload(user, channelId, expiresAt) {
       roles: [
         config.roles.admin500kg,
         config.roles.admin200kg,
-        config.roles.admin120kg
+        config.roles.admin150kg
       ]
     }
   };
@@ -493,7 +493,7 @@ async function openTicket(interaction) {
   }
 
   if (member.roles.cache.has(VERIFIED_ROLE)) {
-    await respond(interaction, "ℹ️ Ya estás verificade.");
+    await respond(interaction, "ℹ️ Ya tenés el rol 100kg.");
     return;
   }
 
@@ -722,10 +722,10 @@ async function acceptTicket(interaction, channelId) {
       );
     } catch (err) {
       clearExpectedRoleChange(member.id);
-      console.error(`${TAG} ⚠️ no pude asignar verificade: ${err.message}`);
+      console.error(`${TAG} ⚠️ no pude asignar el rol 100kg: ${err.message}`);
       await respond(
         interaction,
-        "❌ No pude asignar el rol verificade (revisá permisos y jerarquía de roles)."
+        "❌ No pude asignar el rol 100kg (revisá permisos y jerarquía de roles)."
       );
       return;
     }

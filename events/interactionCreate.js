@@ -1,13 +1,17 @@
 const { Events, MessageFlags } = require("discord.js");
+const config = require("../config");
 
 const interactions = {
   dado: require("../interactions/dado"),
   dias: require("../interactions/dias"),
   hormonas: require("../interactions/hormonas"),
   quilombo: require("../interactions/quilombo"),
-  notify: require("../interactions/notify"),
-  verificacion: require("../interactions/verificacion")
+  notify: require("../interactions/notify")
 };
+
+if (config.verificationEnabled) {
+  interactions.verificacion = require("../interactions/verificacion");
+}
 
 async function dispatch(interaction) {
   if (interaction.isChatInputCommand()) {
